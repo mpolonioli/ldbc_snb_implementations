@@ -17,7 +17,7 @@ public class RyaConnectionState extends DbConnectionState{
 		ryaClient = new RyaClient(baseQueryUrl, baseLoadRdfUrl);
 	}
 
-	RyaClient getClient() {
+	public RyaClient getClient() {
 		return ryaClient;
 	}
 
