@@ -1,0 +1,67 @@
+/*
+Description: Add a Person to the social network.
+*/
+
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX sn:<http://www.ldbc.eu/ldbc_socialnet/1.0/data/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX dbpedia-owl: <http://dbpedia.org/ontology/>
+
+INSERT
+{
+_:study0 snvoc:hasOrganization ?univeristy0 ;
+	snvoc:classYear "2013"^^xsd:integer .
+
+_:study1 snvoc:hasOrganization ?univeristy1 ;
+	snvoc:classYear "2015"^^xsd:integer .
+
+_:work0 snvoc:hasOrganization ?company0 ;
+	snvoc:workFrom "2016"^^xsd:integer .
+
+_:work1 snvoc:hasOrganization ?company1 ;
+	snvoc:workFrom "2017"^^xsd:integer .
+
+sn:pers35184372089013 rdf:type snvoc:Person ;
+	snvoc:studyAt _:study0 ;
+	snvoc:studyAt _:study1 ;
+	snvoc:workAt _:work0 ;
+	snvoc:workAt _:work1 ;
+	snvoc:speaks "it" , "en" ;
+	snvoc:email "michele.polonioli@gmail.com" , "m.polonioli@campus.unimib.it" ;
+	snvoc:hasInterest ?tag0 , ?tag1 ;
+	snvoc:isLocatedIn ?city ;
+	snvoc:id "35184372089013"^^xsd:long ;
+	snvoc:firstName "Michele" ;
+	snvoc:lastName "Polonioli" ;
+	snvoc:gender "male" ;
+	snvoc:birthday "1994-06-21"^^xsd:date ;
+	snvoc:locationIp "65.54.24.5" ;
+	snvoc:browserUsed "Chrome" ;
+	snvoc:creationDate "2017-08-18T02:00:00.000+02"^^xsd:dateTime .
+}
+WHERE
+{
+?university0 rdf:type dbpedia-owl:University ;
+	snvoc:id "2326"^^xsd:int .
+
+?university1 rdf:type dbpedia-owl:University ;
+	snvoc:id "3038"^^xsd:int .
+
+?company0 rdf:type dbpedia-owl:Company ;
+	snvoc:id "482"^^xsd:int .
+
+?company1 rdf:type dbpedia-owl:Company ;
+	snvoc:id "792"^^xsd:int .
+
+?tagClass rdf:type snvoc:TagClass .
+
+?tag0 rdf:type ?tagClass ;
+	snvoc:id "16074"^^xsd:int .
+
+?tag1 rdf:type ?tagClass ;
+	snvoc:id "16073"^^xsd:int .
+
+?city rdf:type dbpedia-owl:City ;
+	snvoc:id "1453"^^xsd:int .
+}

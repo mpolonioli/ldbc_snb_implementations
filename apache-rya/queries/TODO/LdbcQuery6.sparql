@@ -1,0 +1,71 @@
+/*
+Description: Given a start Person and some Tag, find the other Tags that occur together with this Tag on Posts
+that were created by start Person’s friends and friends of friends (excluding start Person). Return For each
+Tag, find the count of Posts that were created by these Persons, which contain both this Tag and the given Tag.
+*/
+
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT DISTINCT ?tagName ?count
+WHERE {
+{
+SELECT ?tagName (COUNT(*) AS ?count)
+WHERE {
+	{
+	SELECT DISTINCT ?post
+	WHERE {
+	?person rdf:type snvoc:Person ;
+		snvoc:id "17592186044425"^^xsd:long ;
+		snvoc:knows ?knowObject .
+
+	?knowObject snvoc:hasPerson ?friend .
+	
+	?post rdf:type snvoc:Post ;
+		snvoc:hasCreator ?friend ;
+		snvoc:hasTag ?tag .
+
+	?tag foaf:name "Billy_Joel" .
+	}
+	}
+	?post snvoc:hasTag ?otherTag .
+
+	?otherTag foaf:name ?tagName .
+	}
+GROUP BY ?tagName
+}
+UNION
+{
+SELECT ?tagName (COUNT(*) AS ?count)
+WHERE {
+	{
+	SELECT DISTINCT ?post 
+	WHERE {
+	?person rdf:type snvoc:Person ;
+		snvoc:id "17592186044425"^^xsd:long ;
+		snvoc:knows ?knowObject1 .
+
+	?knowObject1 snvoc:hasPerson ?friend1 .
+
+	?friend1 snvoc:knows ?knowObject2 .
+
+	?knowObject2 snvoc:hasPerson ?friend2 .
+
+	?post rdf:type snvoc:Post ;
+		snvoc:hasCreator ?friend2 ;
+		snvoc:hasTag ?tag .
+
+	?tag foaf:name "Billy_Joel" .
+	}
+	}
+	?post snvoc:hasTag ?otherTag .
+
+	?otherTag foaf:name ?tagName .
+	}
+GROUP BY ?tagName
+}
+}
+ORDER BY DESC(?count) ASC(?tagName)
+LIMIT 10

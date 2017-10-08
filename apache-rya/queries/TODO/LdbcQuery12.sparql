@@ -1,0 +1,48 @@
+/*
+Description: Given a start Person, find the Comments that this Person’s friends made in reply to Posts,
+considering only those Comments that are immediate (1-hop) replies to Posts, not the transitive (multi-hop)
+case. Only consider Posts with a Tag in a given TagClass or in a descendent of that TagClass. Count the
+number of these reply Comments, and collect the Tags (with valid tag class) that were attached to the Posts
+they replied to. Return Persons with at least one reply, the reply count, and the collection of Tags.
+*/
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT DISTINCT ?personId ?firstName ?lastName ?comment (COUNT(?personId) AS ?count)
+WHERE {
+
+?person rdf:type snvoc:Person ;
+	snvoc:id "6597069766733"^^xsd:long ;
+	snvoc:knows ?knowObject .
+
+?knowObject snvoc:hasPerson ?friend .
+
+?friend snvoc:id ?personId ;
+	snvoc:firstName ?firstName ;
+	snvoc:lastName ?lastName .
+
+
+?comment rdf:type snvoc:Comment ;
+	snvoc:hasCreator ?friend ;
+	snvoc:replyOf ?post .
+
+?post rdf:type snvoc:Post ; 
+	snvoc:hasTag ?tag .
+
+?tag rdf:type ?tagClass .
+
+?tagClass rdfs:label ?tagClassLabel .
+
+?givenTagClass rdfs:label "Song" ;
+	rdfs:subClassOf ?subTagClass .
+
+?subTagClass rdfs:label ?subTagClassLabel .
+
+FILTER(?tagClassLabel = "Song" || ?tagClassLabel = ?subTagClassLabel)
+}
+GROUP BY ?personId ?firstName ?lastName ?comment
+ORDER BY DESC(?count) ASC(?personId)
+LIMIT 20

@@ -1,0 +1,68 @@
+/*
+Description: Given a start Person, find (most recent) Likes on any of start Person’s Messages. Find Persons
+that Liked any of start Person’s Messages, the Messages they liked most recently, creation date of that Like,
+and the latency (in minutes) between creation of Messages and Like. Additionally, for each Person found
+return a flag indicating whether the liker is a friend of start Person. In the case that a Person Liked multiple
+Messages at the same time, return the Message with lowest identifier.
+*/
+
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?likerId ?firstName ?lastName ?likeDate ?messageId ?content ?messageDate ?isNew
+WHERE {
+{
+SELECT DISTINCT ?likerId ?firstName ?lastName ?likeDate ?messageId ?content ?messageDate ?isNew
+WHERE {
+
+?person rdf:type snvoc:Person ;
+	snvoc:id "26388279066636"^^xsd:long .
+
+?post snvoc:hasCreator ?person ;
+	rdf:type snvoc:Post ;
+	snvoc:creationDate ?messageDate ;
+	snvoc:Content | snvoc:imageFile ?content ;
+	snvoc:id ?messageId .
+
+?like snvoc:hasPost ?post ;
+	snvoc:creationDate ?likeDate .
+
+?liker snvoc:likes ?like ;
+	snvoc:id ?likerId ;
+	snvoc:firstName ?firstName ;
+	snvoc:lastName ?lastName .
+
+BIND(EXISTS{?liker snvoc:knows ?knowObject . ?knowObject snvoc:hasPerson ?person .} AS ?isNew)
+
+}
+}
+UNION
+{
+SELECT DISTINCT ?likerId ?firstName ?lastName ?likeDate ?messageId ?content ?messageDate ?isNew
+WHERE {
+?person rdf:type snvoc:Person ;
+	snvoc:id "26388279066636"^^xsd:long .
+
+?comment snvoc:hasCreator ?person ;
+	rdf:type snvoc:Comment ;
+	snvoc:creationDate ?messageDate ;
+	snvoc:Content ?content ;
+	snvoc:id ?messageId .
+
+?like snvoc:hasPost ?comment ;
+	snvoc:creationDate ?likeDate .
+
+?liker snvoc:likes ?like ;
+	snvoc:id ?likerId ;
+	snvoc:firstName ?firstName ;
+	snvoc:lastName ?lastName .
+
+BIND(EXISTS{?liker snvoc:knows ?knowObject . ?knowObject snvoc:hasPerson ?person .} AS ?isNew)
+}
+}
+}
+ORDER BY DESC(?likeDate) ASC(?likerId)
+LIMIT 10
+
+// in java bisogna fare la sottrazione tra likeDate - messageDate e assegnarla alla variabile latency (in minuti)

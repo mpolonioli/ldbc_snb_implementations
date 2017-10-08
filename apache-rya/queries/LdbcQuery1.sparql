@@ -1,0 +1,160 @@
+/*
+Description: Given a start Person, find Persons with a given first name that the start Person is connected to
+(excluding start Person) by at most 3 steps via Knows relationships. Return Persons, including summaries of
+the Persons workplaces and places of study.
+*/
+
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT DISTINCT ?id ?lastName ?birthday ?creationDate ?gender ?browserUsed ?locationIp ?cityName ?dist
+WHERE{
+{
+?person rdf:type snvoc:Person ;
+	snvoc:id "13194139533332"^^xsd:long .
+
+?person snvoc:knows ?knowObject1 .
+
+?knowObject1 snvoc:hasPerson ?friend1 .
+
+?friend1 snvoc:firstName "Alexei" ;
+	snvoc:id ?id ;
+	snvoc:lastName ?lastName ;
+	snvoc:birthday ?birthday ;
+	snvoc:creationDate ?creationDate ;
+	snvoc:gender ?gender ;
+	snvoc:browserUsed ?browserUsed ;
+	snvoc:locationIP ?locationIp ;
+	snvoc:isLocatedIn ?city .
+
+?city foaf:name ?cityName .
+
+BIND(1 AS ?dist)
+}
+UNION
+{
+?person rdf:type snvoc:Person ;
+	snvoc:id "13194139533332"^^xsd:long .
+
+?person snvoc:knows ?knowObject1 .
+
+?knowObject1 snvoc:hasPerson ?friend1 .
+
+?friend1 snvoc:knows ?knowObject2 .
+
+?knowObject2 snvoc:hasPerson ?friend2 .
+
+?friend2 snvoc:firstName "Alexei" ;
+	snvoc:id ?id ;
+	snvoc:lastName ?lastName ;
+	snvoc:birthday ?birthday ;
+	snvoc:creationDate ?creationDate ;
+	snvoc:gender ?gender ;
+	snvoc:browserUsed ?browserUsed ;
+	snvoc:locationIP ?locationIp ;
+	snvoc:isLocatedIn ?city .
+
+?city foaf:name ?cityName .
+
+BIND(2 AS ?dist)
+}
+UNION
+{
+?person rdf:type snvoc:Person ;
+	snvoc:id "13194139533332"^^xsd:long .
+
+?person snvoc:knows ?knowObject1 .
+
+?knowObject1 snvoc:hasPerson ?friend1 .
+
+?friend1 snvoc:knows ?knowObject2 .
+
+?knowObject2 snvoc:hasPerson ?friend2 .
+
+?friend2 snvoc:knows ?knowObject3 .
+
+?knowObject3 snvoc:hasPerson ?friend3 .
+
+?friend3 snvoc:firstName "Alexei" ;
+	snvoc:id ?id ;
+	snvoc:lastName ?lastName ;
+	snvoc:birthday ?birthday ;
+	snvoc:creationDate ?creationDate ;
+	snvoc:gender ?gender ;
+	snvoc:browserUsed ?browserUsed ;
+	snvoc:locationIP ?locationIp ;
+	snvoc:isLocatedIn ?city .
+
+?city foaf:name ?cityName .
+
+BIND(3 AS ?dist)
+}
+}
+ORDER BY ASC(?dist) ASC(?lastName) ASC(?id)
+LIMIT 20
+
+/*
+Per ogni persona trovata nella quey precedente trovare emails, languages, universities, companies 
+*/
+
+// emails
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT ?email
+WHERE {
+?person rdf:type snvoc:Person ;
+	snvoc:id "FRIEND_ID"^^xsd:long ;
+	snvoc:email ?email .
+}
+
+// languages
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT ?language
+WHERE {
+?person rdf:type snvoc:Person ;
+	snvoc:id "FRIEND_ID"^^xsd:long ;
+	snvoc:speaks ?language .
+}
+
+// universities
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+SELECT ?universityName ?classYear ?cityName
+WHERE {
+?person rdf:type snvoc:Person ;
+	snvoc:id "FRIEND_ID"^^xsd:long ;
+	snvoc:studyAt ?studyObject .
+
+?studyObject snvoc:classYear ?classYear ;
+	snvoc:hasOrganisation ?university .
+
+?university foaf:name ?universityName ;
+	snvoc:isLocatedIn ?city .
+
+?city foaf:name ?cityName . 
+}
+
+// companies
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT ?companyName ?workFrom ?countryName
+WHERE {
+?person rdf:type snvoc:Person ;
+  snvoc:id "FRIEND_ID"^^xsd:long ;
+  snvoc:workAt ?workObject .
+
+?workObject snvoc:workFrom ?workFrom ;
+  snvoc:hasOrganisation ?company .
+
+?company foaf:name ?companyName ;
+  snvoc:isLocatedIn ?country .
+
+?country foaf:name ?countryName . 
+}
+

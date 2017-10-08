@@ -1,0 +1,29 @@
+/*
+Description: Given a Message, retrieve its author.
+*/
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT ?personId ?firstName ?lastName
+WHERE {
+  {
+    ?message snvoc:id "687194783257"^^xsd:long ;
+      rdf:type snvoc:Post ;
+      snvoc:hasCreator ?person .
+
+    ?person snvoc:id ?personId ;
+      snvoc:firstName ?firstName ;
+      snvoc:lastName ?lastName .
+  }
+  UNION
+  {
+    ?message snvoc:id "687194783257"^^xsd:long ;
+      rdf:type snvoc:Comment ;
+      snvoc:hasCreator ?person .
+
+    ?person snvoc:id ?personId ;
+      snvoc:firstName ?firstName ;
+      snvoc:lastName ?lastName .
+  }
+}
+

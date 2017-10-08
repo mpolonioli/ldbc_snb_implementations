@@ -1,0 +1,22 @@
+/*
+Description: Given a start Person, retrieve all of their friends, and the date at which they became friends.
+*/
+
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?personId ?personFirstname ?personLastName ?knowCreationDate
+WHERE {
+	?person rdf:type snvoc:Person ;
+		snvoc:id "6597069766733"^^xsd:long ;
+		snvoc:knows ?know .
+
+	?know snvoc:hasPerson ?friend ;
+		snvoc:creationDate ?knowCreationDate .
+
+	?friend snvoc:id ?personId ;
+		snvoc:firstName ?personFirstName ;
+		snvoc:lastName ?personLastName .
+}
+ORDER BY DESC(?creationDate) ASC(?personId)

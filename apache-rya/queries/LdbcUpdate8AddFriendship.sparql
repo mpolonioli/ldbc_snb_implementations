@@ -1,0 +1,22 @@
+/*
+Description: Add a friendship relation to the social network
+*/
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX sn:<http://www.ldbc.eu/ldbc_socialnet/1.0/data/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+INSERT
+{
+_:know snvoc:hasPerson ?person2 ;
+	snvoc:creationDate "2017-08-12T18:20:15.432+02:00"^^xsd:dateTime .
+
+?person1 snvoc:knows _:know .
+}
+WHERE
+{
+?person1 rdf:type snvoc:Person ;
+	snvoc:id "456789987654567"^^xsd:long .
+
+?person2 rdf:type snvoc:Person ;
+	snvoc:id "123456432"^^xsd:long .
+}

@@ -1,0 +1,102 @@
+/*
+Description: Given a start Person, find the (most recent) Messages created by that Person’s friends or friends
+of friends (excluding start Person). Only consider the Messages created before a given date (excluding that
+date).
+*/
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?personId ?firstName ?lastName ?messageId ?content ?messageDate
+WHERE {
+{
+SELECT DISTINCT ?personId ?firstName ?lastName ?messageId ?content ?messageDate
+WHERE {
+{
+?person rdf:type snvoc:Person ;
+	snvoc:id "6597069766733"^^xsd:long ;
+	snvoc:knows ?knowObject .
+
+?knowObject snvoc:hasPerson ?friend .
+
+?friend snvoc:id ?personId ;
+	snvoc:firstName ?firstName ;
+	snvoc:lastName ?lastName .
+
+?message snvoc:hasCreator ?friend ;
+	rdf:type snvoc:Post ;
+	snvoc:creationDate ?messageDate ;
+	snvoc:id ?messageId ;
+	snvoc:imageFile | snvoc:Content ?content .
+
+}
+UNION
+{
+?person rdf:type snvoc:Person ;
+	snvoc:id "6597069766733"^^xsd:long ;
+	snvoc:knows ?knowObject .
+
+?knowObject snvoc:hasPerson ?friend .
+
+?friend snvoc:id ?personId ;
+	snvoc:firstName ?firstName ;
+	snvoc:lastName ?lastName .
+
+?message snvoc:hasCreator ?friend ;
+	rdf:type snvoc:Comment ;
+	snvoc:creationDate ?messageDate ;
+	snvoc:id ?messageId ;
+	snvoc:imageFile | snvoc:Content ?content .
+
+}
+UNION
+{
+?person rdf:type snvoc:Person ;
+	snvoc:id "6597069766733"^^xsd:long ;
+	snvoc:knows ?knowObject1 .
+
+?knowObject1 snvoc:hasPerson ?friend1 .
+
+?friend1 snvoc:knows ?knowObject2 .
+
+?knowObject2 snvoc:hasPerson ?friend2 .
+
+?friend2 snvoc:id ?personId ;
+	snvoc:firstName ?firstName ;
+	snvoc:lastName ?lastName .
+
+?message snvoc:hasCreator ?friend2 ;
+	rdf:type snvoc:Post ;
+	snvoc:creationDate ?messageDate ;
+	snvoc:id ?messageId ;
+	snvoc:imageFile | snvoc:Content ?content .
+}
+UNION
+{
+?person rdf:type snvoc:Person ;
+	snvoc:id "6597069766733"^^xsd:long ;
+	snvoc:knows ?knowObject1 .
+
+?knowObject1 snvoc:hasPerson ?friend1 .
+
+?friend1 snvoc:knows ?knowObject2 .
+
+?knowObject2 snvoc:hasPerson ?friend2 .
+
+?friend2 snvoc:id ?personId ;
+	snvoc:firstName ?firstName ;
+	snvoc:lastName ?lastName .
+
+?message snvoc:hasCreator ?friend2 ;
+	rdf:type snvoc:Comment ;
+	snvoc:creationDate ?messageDate ;
+	snvoc:id ?messageId ;
+	snvoc:imageFile | snvoc:Content ?content .
+}
+}
+}
+FILTER(?personId != "17592186044504"^^xsd:long)
+FILTER(?messageDate < "2015-01-01"^^xsd:dateTime)
+}
+ORDER BY DESC(?creationDate) ASC(?messageId)
+LIMIT 20

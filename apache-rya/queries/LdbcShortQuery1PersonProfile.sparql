@@ -1,0 +1,23 @@
+/*
+Description: Given a start Person, retrieve their first name, last name, birthday, IP address, browser, and city
+of residence.
+*/
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?firstName ?lastName ?birthday ?locationIp ?browserUsed ?placeId ?gender ?creationDate 
+WHERE {
+?person rdf:type snvoc:Person ;
+	snvoc:id "6597069766733"^^xsd:long ;
+	snvoc:firstName ?firstName ;
+	snvoc:lastName ?lastName ;
+	snvoc:birthday ?birthday ;
+	snvoc:locationIP ?locationIp ;
+	snvoc:browserUsed ?browserUsed ;
+	snvoc:gender ?gender ;
+	snvoc:creationDate ?creationDate ;
+	snvoc:isLocatedIn ?place .
+
+?place snvoc:id ?placeId .
+}

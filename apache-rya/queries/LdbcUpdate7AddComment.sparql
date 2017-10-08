@@ -1,0 +1,48 @@
+/*
+Description: Add a Comment replying to a Post/Comment to the social network.
+*/
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX sn:<http://www.ldbc.eu/ldbc_socialnet/1.0/data/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX dbpedia-owl: <http://dbpedia.org/ontology/>
+
+INSERT
+{
+sn:comm456789987654567 rdf:type snvoc:Comment ;
+	snvoc:id "456789987654567"^^xsd:long ;
+	snvoc:creationDate "2017-08-12T18:20:15.432+02:00"^^xsd:dateTime ;
+	snvoc:locationIp "342.432.23.43.1" ;
+	snvoc:browserUsed "Chrome" ;
+	snvoc:content "hey!" ;
+	snvoc:length "4"^^xsd:int ;
+	snvoc:hasCreator ?person ;
+	snvoc:isLocatedIn ?country ;
+	snvoc:replyOf ?commentOrPost .
+
+?forum snvoc:containerOf sn:comm456789987654567 .
+sn:comment456789987654567 snvoc:hasTag ?tag0 .
+sn:comment456789987654567 snvoc:hasTag ?tag1 .
+
+}
+WHERE
+{
+?person rdf:type snvoc:Person ;
+	snvoc:id "6533223453"^^xsd:long .
+
+?country dbpedia-owl:type snvoc:Country ;
+	snvoc:id "575323"^^xsd:int .
+
+?commentOrPost rdf:type ?type ;
+	snvoc:id "23456543"^^xsd:long .
+
+FILTER(?type = snvoc:Post || ?type = snvoc:Comment)
+
+?forum snvoc:containerOf ?commentOrPost .
+
+?tagClass rdf:type snvoc:TagClass .?tag0 rdf:type ?tagClass ;
+	snvoc:id "16074"^^xsd:int .
+?tag1 rdf:type ?tagClass ;
+	snvoc:id "16073"^^xsd:int .
+
+}

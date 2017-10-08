@@ -1,0 +1,52 @@
+/*
+Description: Given a start Person, find (most recent) Comments that are replies to Messages of the start Per-
+son. Only consider immediate (1-hop) replies, not the transitive (multi-hop) case. Return the reply Comments,
+and the Person that created each reply Comment.
+*/
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?replierId ?firstName ?lastName ?commentDate ?commentId ?content
+WHERE {
+{
+?person rdf:type snvoc:Person ;
+	snvoc:id "17592186044504"^^xsd:long .
+
+?message rdf:type snvoc:Post ;
+	 snvoc:hasCreator ?person .
+
+
+?comment rdf:type snvoc:Comment ;
+	snvoc:replyOf ?message ;
+	snvoc:id ?commentId ;
+	snvoc:content ?content ;
+	snvoc:creationDate ?commentDate ;
+	snvoc:hasCreator ?replier .
+
+?replier snvoc:id ?replierId ;
+	snvoc:firstName ?firstName ;
+	snvoc:lastName ?lastName .
+}
+UNION
+{
+?person rdf:type snvoc:Person ;
+	snvoc:id "17592186044504"^^xsd:long .
+
+?message rdf:type snvoc:Comment ;
+         snvoc:hasCreator ?person .
+
+?comment rdf:type snvoc:Comment ;
+	snvoc:replyOf ?message ;
+	snvoc:id ?commentId ;
+	snvoc:content ?content ;
+	snvoc:creationDate ?commentDate ;
+	snvoc:hasCreator ?replier .
+
+?replier snvoc:id ?replierId ;
+	snvoc:firstName ?firstName ;
+	snvoc:lastName ?lastName .
+}
+}
+ORDER BY DESC(?commentDate) ASC(?commentId)
+LIMIT 20
