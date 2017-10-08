@@ -1,23 +1,12 @@
 package net.mpolonioli.ldbcimpls.incubator.rya.interactive;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.ldbc.driver.Db;
 import com.ldbc.driver.DbConnectionState;
 import com.ldbc.driver.DbException;
-import com.ldbc.driver.OperationHandler;
-import com.ldbc.driver.ResultReporter;
+
 import com.ldbc.driver.control.LoggingService;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.*;
 
@@ -26,8 +15,6 @@ import net.mpolonioli.ldbcimpls.incubator.rya.interactive.queries.*;
 public class RyaDb extends Db{
 
 	public DbConnectionState dbConnectionState = null;
-	private static DateFormat creationDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX");
-	private static DateFormat birthdateDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 	
 	@Override
 	protected DbConnectionState getConnectionState() throws DbException {
