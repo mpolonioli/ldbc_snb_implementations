@@ -1,0 +1,41 @@
+/*
+Description: Given a start Person, find the Forums which that Person’s friends and friends of friends (exclud-
+ing start Person) became Members of after a given date. For each forum find the number of Posts that were
+created by any of these Persons. For each Forum and consider only those Persons which joined that particular
+Forum after the given date.
+*/
+
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT DISTINCT ?title (COUNT(?post) AS ?count)
+WHERE 
+{
+?person snvoc:id "13194139533332"^^xsd:long ;
+	rdf:type snvoc:Person ;
+	snvoc:knows ?knowObject .
+
+?person 
+	(snvoc:knows/snvoc:hasPerson)|
+	(snvoc:knows/snvoc:hasPerson/snvoc:knows/snvoc:hasPerson)|
+		?friend .
+FILTER ( ?person != ?friend )
+
+?forum (snvoc:hasMember/snvoc:hasPerson) ?friend .
+?forum rdf:type snvoc:Forum ;
+	snvoc:hasMember ?memberObject ;
+	snvoc:id ?id ;
+	snvoc:title ?title .
+?memberObject snvoc:joinDate ?joinDate .
+FILTER(?joinDate > "2009-01-01T19:00:00.123+01:00"^^xsd:dateTime)
+
+?forum snvoc:containerOf ?post .
+
+?post snvoc:hasCreator ?friend ; 
+	rdf:type snvoc:Post .
+}
+GROUP BY ?title
+ORDER BY DESC(?count) ASC(?id)
+LIMIT 20

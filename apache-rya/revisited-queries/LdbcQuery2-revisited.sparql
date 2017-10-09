@@ -1,0 +1,31 @@
+/*
+Description: Given a start Person, find (most recent) Messages from all of that Person’s friends, that were
+created before (and including) a given date.
+*/
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?friendId ?firstName ?lastName ?messageId ?content ?creationDate
+WHERE 
+{
+?person snvoc:id "13194139533332"^^xsd:long ;
+	 rdf:type snvoc:Person .
+
+?person (snvoc:knows/snvoc:hasPerson) ?friend .
+
+VALUES (?messageType) { ( snvoc:Post ) ( snvoc:Comment ) }
+?post rdf:type ?messageType ;
+        snvoc:id ?messageId ;
+	snvoc:hasCreator ?friend ;
+	snvoc:creationDate ?creationDate ;
+	snvoc:imageFile | snvoc:content ?content .
+
+?friend snvoc:id ?friendId ;
+	snvoc:firstName ?firstName;
+	snvoc:lastName ?lastName .
+
+FILTER(?creationDate <= "2012-01-01T19:00:00.123+01:00"^^xsd:dateTime)
+}
+ORDER BY DESC(?creationDate) ASC(?id)
+LIMIT 10

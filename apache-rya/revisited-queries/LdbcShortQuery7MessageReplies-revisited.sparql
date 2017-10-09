@@ -1,0 +1,33 @@
+/*
+Description: Given a Message, retrieve the (1-hop) Comments that reply to it. In addition, return a boolean
+flag indicating if the author of the reply knows the author of the original message. If author is same as original
+author, return false for "knows" flag.
+*/
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT ?commentId ?commentContent ?commentCreationDate ?personId ?firstName ?lastName ?boolean
+WHERE {
+VALUES (?messageType) { ( snvoc:Post ) ( snvoc:Comment ) }
+?message snvoc:id "687194783247"^^xsd:long  ;
+	rdf:type ?messageType ;
+	snvoc:hasCreator ?author .
+
+?comment snvoc:replyOf ?message ;
+	snvoc:id ?commentId ;
+	snvoc:content ?commentContent ;
+	snvoc:hasCreator ?person ;
+	snvoc:creationDate ?commentCreationDate .
+
+?person snvoc:knows ?knowObject .
+
+?person snvoc:id ?personId ;
+	snvoc:firstName ?firstName ;
+	snvoc:lastName ?lastName .
+
+BIND(
+	EXISTS{?knowObject snvoc:hasPerson ?author}
+	AS ?boolean
+)
+}
+ORDER BY DESC(?creationDate) ASC(?personId)

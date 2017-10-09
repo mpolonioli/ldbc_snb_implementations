@@ -1,0 +1,22 @@
+/*
+Description: Add a Forum membership to the social network.
+*/
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX sn:<http://www.ldbc.eu/ldbc_socialnet/1.0/data/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+INSERT
+{
+$MEMBEROBJECT snvoc:hasPerson ?person ;
+	snvoc:joinDate "$JOINDATE"^^xsd:dateTime .
+
+?forum snvoc:hasMember $MEMBEROBJECT .	
+}
+WHERE
+{
+?person rdf:type snvoc:Person ;
+	snvoc:id "$PERSONID"^^xsd:long .
+
+?forum rdf:type snvoc:Forum ;
+	snvoc:id "$FORUMID"^^xsd:long .
+}

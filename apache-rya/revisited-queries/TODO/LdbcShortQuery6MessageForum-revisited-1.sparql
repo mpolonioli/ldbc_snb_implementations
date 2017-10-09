@@ -1,0 +1,28 @@
+/*
+Description: Given a Message, retrieve the Forum that contains it and the Person that moderates that forum.
+Since comments are not directly contained in forums, for comments, return the forum containing the original
+post in the thread which the comment is replying to.
+*/
+
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT DISTINCT ?forumId ?forumTitle ?personId ?firstName ?lastName
+WHERE
+{
+VALUES (?messageType) { ( snvoc:Post ) ( snvoc:Comment ) }
+?message snvoc:id "687194783257"^^xsd:long ;
+	rdf:type ?messageType .
+
+?message (snvoc:replyOf)* ?post .
+?post rdf:type snvoc:Post .
+
+?forum snvoc:containerOf ?post ;
+	snvoc:id ?forumId ;
+	snvoc:title ?forumTitle ;
+	snvoc:hasModerator ?person .
+
+?person snvoc:id ?personId ;
+	snvoc:firstName ?firstName ;
+	snvoc:lastName ?lastName .
+}

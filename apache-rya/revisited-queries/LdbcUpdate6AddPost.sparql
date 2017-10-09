@@ -1,0 +1,47 @@
+/*
+Description: Add a Post to the social network.
+*/
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX sn:<http://www.ldbc.eu/ldbc_socialnet/1.0/data/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+INSERT
+{
+sn:post456789987654567 rdf:type snvoc:Post ;
+	snvoc:id "456789987654567"^^xsd:long ;
+	snvoc:imageFile "image698.jpg" ;
+	snvoc:creationDate "2017-08-12T18:20:15.432+02:00"^^xsd:dateTime ;
+	snvoc:locationIp "342.432.23.43.1" ;
+	snvoc:browserUsed "Chrome" ;
+	snvoc:language "en" ;
+	snvoc:content "hey!" ;
+	snvoc:length "4"^^xsd:int ;
+	snvoc:hasCreator ?person ;
+	snvoc:isLocatedIn ?country ;
+
+?forum snvoc:containerOf sn:post456789987654567 .
+
+sn:post456789987654567 snvoc:hasTag ?tag0 .
+sn:post456789987654567 snvoc:hasTag ?tag1 .
+
+}
+WHERE
+{
+?person rdf:type snvoc:Person ;
+	snvoc:id "6533223453"^^xsd:long .
+
+?forum rdf:type snvoc:Forum ;
+	snvoc:id "575323"^^xsd:long .
+
+?country dbpedia-owl:type snvoc:Country ;
+	snvoc:id "2355323"^^xsd:int .
+
+?tagClass rdf:type snvoc:TagClass .
+
+?tag0 rdf:type ?tagClass ;
+	snvoc:id "16074"^^xsd:int .
+?tag1 rdf:type ?tagClass ;
+	snvoc:id "16073"^^xsd:int .
+
+}

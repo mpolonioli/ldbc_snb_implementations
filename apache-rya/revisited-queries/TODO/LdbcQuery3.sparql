@@ -1,0 +1,54 @@
+/*
+Description: Given a start Person, find Persons that are their friends and friends of friends (excluding start
+Person) that have made Posts/Comments in both of the given Countries, X and Y, within a given period. Only
+Persons that are foreign to Countries X and Y are considered, that is Persons whose Location is not Country
+X or Country Y.
+*/
+SELECT DISTINCT ?friend ?message (COUNT(?message) AS ?count)
+WHERE
+{
+?person snvoc:id "13194139533332"^^xsd:long ;
+	rdf:type snvoc:Person .
+
+?person 
+	(snvoc:knows/snvoc:hasPerson)|
+	(snvoc:knows/snvoc:hasPerson/snvoc:knows/snvoc:hasPerson)
+		?friend .
+FILTER ( ?person != ?friend )
+
+VALUES (?messageType) { ( snvoc:Post ) ( snvoc:Comment ) }
+?message snvoc:hasCreator ?friend ;
+	rdf:type ?messageType ;
+	snvoc:creationDate ?creationDate .
+
+?countryX foaf:name "India" ;
+	rdf:type dbpedia-owl:Country .
+?countryY foaf:name "Albania" ;
+	rdf:type dbpedia-owl:Country .
+
+EXISTS { ?message snvoc:isLocatedIn ?contryX }
+EXISTS { ?message snvoc:isLocatedIn ?countryY }
+FILTER ( ?creationDate <= "2012-01-01T19:00:00.123+01:00"^^xsd:dateTime )
+FILTER ( ?creationDate >= "2011-01-01T19:00:00.123+01:00"^^xsd:dateTime )
+
+?message snvoc:isLocatedIn ?countryX .
+}
+GROUP BY ?message
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,17 @@
+/*
+Description: Given a Message, retrieve its content and creation date.
+*/
+
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?creationDate ?content
+WHERE
+{
+VALUES (?messageType) { ( snvoc:Post ) ( snvoc:Comment ) }
+?message snvoc:id "687194783257"^^xsd:long ;
+	rdf:type ?messageType ;
+	snvoc:content | snvoc:imageFile ?content;
+	snvoc:creationDate ?creationDate .
+}

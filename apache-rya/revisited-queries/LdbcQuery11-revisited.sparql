@@ -1,0 +1,38 @@
+/*
+Description: Given a start Person, find that Person’s friends and friends of friends (excluding start Person)
+who started Working in some Company in a given Country, before a given date (year).
+*/
+
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT DISTINCT ?personId ?firstName ?lastName ?companyName ?classYear
+WHERE
+{
+?person snvoc:id "6597069766733"^^xsd:long ;
+	rdf:type snvoc:Person .
+
+?person 
+	(snvoc:knows/snvoc:hasPerson)|
+	(snvoc:knows/snvoc:hasPerson/snvoc:knows/snvoc:hasPerson) 
+		?friend .
+FILTER ( ?person != ?friend )
+
+?friend snvoc:id ?personId ;
+	snvoc:workAt ?workObject ;
+	snvoc:firstName ?firstName ;
+	snvoc:lastName ?lastName .
+
+?workObject snvoc:hasOrganisation ?company ;
+	snvoc:workFrom ?classYear .
+FILTER(?classYear < 2012)
+
+?company snvoc:isLocatedIn ?country ;
+	foaf:name ?companyName .
+
+?country foaf:name "India" .
+}
+ORDER BY ASC(?classYear) ASC(?personId) DESC(?companyName)
+LIMIT 10

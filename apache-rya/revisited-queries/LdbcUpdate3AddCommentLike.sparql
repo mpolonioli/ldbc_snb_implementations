@@ -1,0 +1,23 @@
+/*
+Description: Add a Like to a Comment of the social network.
+*/
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX sn:<http://www.ldbc.eu/ldbc_socialnet/1.0/data/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+INSERT
+{
+?person snvoc:likes _:like .
+
+_:like snvoc:hasComment ?comment ;
+	snvoc:creationDate "2017-08-12T18:20:15.432+02:00"^^xsd:dateTime .
+}
+WHERE
+{
+?person rdf:type snvoc:Person ;
+	snvoc:id "6597069766719"^^xsd:long .
+
+?comment rdf:type snvoc:Comment ;
+	snvoc:id "687194783227"^^xsd:long .
+}

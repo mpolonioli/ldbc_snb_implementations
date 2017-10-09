@@ -1,0 +1,42 @@
+/*
+Description: Given a start Person and some Tag, find the other Tags that occur together with this Tag on Posts
+that were created by start Person’s friends and friends of friends (excluding start Person). Return For each
+Tag, find the count of Posts that were created by these Persons, which contain both this Tag and the given Tag.
+*/
+
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT DISTINCT ?tagName (COUNT(*) AS ?count)
+WHERE 
+{
+	{
+	SELECT DISTINCT ?post
+	WHERE 
+	{
+	?person snvoc:id "17592186044425"^^xsd:long
+		rdf:type snvoc:Person .
+
+	?person 
+		(snvoc:knows/snvoc:hasPerson)|
+		(snvoc:knows/snvoc:hasPerson/snvoc:knows/snvoc:hasPerson)
+			?friend .
+	FILTER( ?person != ?friend )
+	
+	VALUES (?messageType) { ( snvoc:Post ) ( snvoc:Comment ) }
+	?post snvoc:hasCreator ?friend ;
+		rdf:type ?messageType ;
+		snvoc:hasTag ?tag .
+
+	?tag foaf:name "Billy_Joel" .
+	}
+	}
+	?post snvoc:hasTag ?otherTag .
+
+	?otherTag foaf:name ?tagName .
+}
+GROUP BY ?tagName
+ORDER BY DESC(?count) ASC(?tagName)
+LIMIT 10

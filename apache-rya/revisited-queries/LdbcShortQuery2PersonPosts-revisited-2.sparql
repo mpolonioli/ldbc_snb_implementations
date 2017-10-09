@@ -1,0 +1,50 @@
+/*
+Description: Given a start Person, retrieve the last 10 Messages created by that user. For each message, return
+that message, the original post in its conversation, and the author of that post. If any of the Messages is a Post,
+then the original Post will be the same Message, i.e. that Message will appear twice in that result.
+*/
+
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT DISTINCT ?messageId ?content ?creationDate ?postId ?personId ?firstName ?lastName
+WHERE {
+{
+?person snvoc:id "6597069766733"^^xsd:long ; 
+	rdf:type snvoc:Person .
+
+?message snvoc:hasCreator ?person ;
+	rdf:type snvoc:Post ;
+	snvoc:id ?messageId ;
+	snvoc:content | snvoc:imageFile ?content ;
+	snvoc:creationDate ?creationDate ;
+	snvoc:id ?postId .
+
+?person snvoc:id ?personId ;
+	snvoc:firstName ?firstName ;
+	snvoc:lastName ?lastName .
+}
+UNION
+{
+?person snvoc:id "6597069766733"^^xsd:long ; 
+	rdf:type snvoc:Person .
+
+?comment snvoc:hasCreator ?person ;
+	rdf:type snvoc:Comment ;
+	snvoc:id ?messageId ;
+	snvoc:content ?content ;
+	snvoc:creationDate ?creationDate .
+
+?comment (snvoc:replyOf)+ ?originalMessage .
+
+?originalMessage snvoc:Post :
+	snvoc:id ?postId ;
+	snvoc:hasCreator ?originalMessagePerson .
+
+?originalMessagePerson snvoc:id ?personId ;
+	snvoc:firstName ?firstName ;
+	snvoc:lastName ?lastName .
+}
+}
+ORDER BY DESC(?creationDate) DESC(?messageId)
+LIMIT 10

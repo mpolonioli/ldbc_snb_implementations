@@ -1,0 +1,31 @@
+/*
+Description: Add a Forum to the social network.
+*/
+PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX sn:<http://www.ldbc.eu/ldbc_socialnet/1.0/data/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX dbpedia-owl: <http://dbpedia.org/ontology/>
+
+INSERT
+{
+sn:forum190000000 rdf:type snvoc:Forum ;
+	snvoc:id "190000000"^^xsd:long ;
+	snvoc:title "Titolo del Forum" ;
+	snvoc:creationDate "2017-08-12T18:20:15.432+02:00"^^xsd:dateTime ;
+	snvoc:hasModerator ?moderator .
+sn:forum190000000 snvoc:hasTag ?tag0 .
+sn:forum190000000 snvoc:hasTag ?tag1 .
+}
+WHERE
+{
+?moderator snvoc:id "6597069766719"^^xsd:long ; 
+	rdf:type snvoc:Person .
+
+?tagClass rdf:type snvoc:TagClass .
+
+?tag0 rdf:type ?tagClass ;
+	snvoc:id "16074"^^xsd:int .
+?tag1 rdf:type ?tagClass ;
+	snvoc:id "16073"^^xsd:int .
+}
