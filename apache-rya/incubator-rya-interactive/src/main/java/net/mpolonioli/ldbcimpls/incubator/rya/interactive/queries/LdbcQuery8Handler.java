@@ -51,7 +51,6 @@ public class LdbcQuery8Handler implements OperationHandler<LdbcQuery8, DbConnect
 						"{\n" + 
 						"?person snvoc:id \"" + id + "\"^^xsd:long ; \n" + 
 						"	rdf:type snvoc:Person .\n" + 
-						"	 .\n" + 
 						"\n" + 
 						"VALUES (?messageType) { ( snvoc:Post ) ( snvoc:Comment ) }\n" + 
 						"?message snvoc:hasCreator ?person ;\n" + 

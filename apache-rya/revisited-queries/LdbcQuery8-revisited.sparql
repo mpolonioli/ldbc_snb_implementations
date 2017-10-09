@@ -16,7 +16,6 @@ WHERE
 VALUES (?messageType) { ( snvoc:Post ) ( snvoc:Comment ) }
 ?message snvoc:hasCreator ?person ;
 	rdf:type ?messageType .
-	  .
 ?comment snvoc:replyOf ?message ; 
 	rdf:type snvoc:Comment ;
 	snvoc:id ?commentId ;
