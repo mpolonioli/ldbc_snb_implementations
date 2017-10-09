@@ -8,6 +8,8 @@ import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.TupleQuery;
+import org.openrdf.query.Update;
+import org.openrdf.query.UpdateExecutionException;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 
@@ -102,10 +104,9 @@ OperationHandler<LdbcUpdate6AddPost, DbConnectionState> {
 						"}";
 
 		try {
-			TupleQuery tupleQuery = conn.prepareTupleQuery(
-					QueryLanguage.SPARQL, query);
-			tupleQuery.evaluate();
-		} catch (RepositoryException | MalformedQueryException | QueryEvaluationException e) {
+			Update update = conn.prepareUpdate(QueryLanguage.SPARQL, query);
+			update.execute();
+		} catch (RepositoryException | MalformedQueryException | UpdateExecutionException e) {
 			e.printStackTrace();
 		}
 
