@@ -3,6 +3,13 @@ package net.mpolonioli.ldbcimpls.incubator.rya.interactive.queries;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQuery;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
+
 import com.ldbc.driver.DbConnectionState;
 import com.ldbc.driver.DbException;
 import com.ldbc.driver.OperationHandler;
@@ -10,7 +17,6 @@ import com.ldbc.driver.ResultReporter;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcNoResult;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcUpdate5AddForumMembership;
 
-import net.mpolonioli.ldbcimpls.incubator.rya.interactive.RyaClient;
 import net.mpolonioli.ldbcimpls.incubator.rya.interactive.RyaConnectionState;
 
 public class LdbcUpdate5AddForumMembershipHandler implements
@@ -23,11 +29,11 @@ OperationHandler<LdbcUpdate5AddForumMembership, DbConnectionState> {
 			DbConnectionState dbConnectionState,
 			ResultReporter resultReporter) throws DbException {
 
-		RyaClient ryaClient = (((RyaConnectionState) dbConnectionState).getClient());
+		RepositoryConnection conn = (((RyaConnectionState) dbConnectionState).getClient());
 
 		long personId = ldbcUpdate5AddForumMembership.personId();
 		long forumId = ldbcUpdate5AddForumMembership.forumId();
-		String joinDate = creationDateFormat.format(ldbcUpdate5AddForumMembership.joinDate()) + ":00";
+		String joinDate = creationDateFormat.format(ldbcUpdate5AddForumMembership.joinDate());
 
 		String query =
 				"PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>\n" + 
@@ -51,7 +57,13 @@ OperationHandler<LdbcUpdate5AddForumMembership, DbConnectionState> {
 						"}"
 						;
 
-		ryaClient.executeUpdateQuery(query);
+		try {
+			TupleQuery tupleQuery = conn.prepareTupleQuery(
+					QueryLanguage.SPARQL, query);
+			tupleQuery.evaluate();
+		} catch (RepositoryException | MalformedQueryException | QueryEvaluationException e) {
+			e.printStackTrace();
+		}
 
 		resultReporter.report(0, LdbcNoResult.INSTANCE, ldbcUpdate5AddForumMembership);
 	}

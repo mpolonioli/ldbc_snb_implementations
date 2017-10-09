@@ -4,6 +4,13 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQuery;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
+
 import com.ldbc.driver.DbConnectionState;
 import com.ldbc.driver.DbException;
 import com.ldbc.driver.OperationHandler;
@@ -11,7 +18,6 @@ import com.ldbc.driver.ResultReporter;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcNoResult;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcUpdate7AddComment;
 
-import net.mpolonioli.ldbcimpls.incubator.rya.interactive.RyaClient;
 import net.mpolonioli.ldbcimpls.incubator.rya.interactive.RyaConnectionState;
 
 public class LdbcUpdate7AddCommentHandler implements
@@ -24,7 +30,7 @@ OperationHandler<LdbcUpdate7AddComment, DbConnectionState> {
 			DbConnectionState dbConnectionState,
 			ResultReporter resultReporter) throws DbException {
 
-		RyaClient ryaClient = (((RyaConnectionState) dbConnectionState).getClient());
+		RepositoryConnection conn = (((RyaConnectionState) dbConnectionState).getClient());
 
 		long personId = ldbcUpdate7AddComment.authorPersonId();
 		long replyToId;
@@ -38,7 +44,7 @@ OperationHandler<LdbcUpdate7AddComment, DbConnectionState> {
 		long commentId = ldbcUpdate7AddComment.commentId();
 		long countryId = ldbcUpdate7AddComment.countryId();
 		String content = ldbcUpdate7AddComment.content();
-		String creationDate = creationDateFormat.format(ldbcUpdate7AddComment.creationDate()) + ":00";
+		String creationDate = creationDateFormat.format(ldbcUpdate7AddComment.creationDate());
 		String locationIp = ldbcUpdate7AddComment.locationIp();
 		String browserUsed = ldbcUpdate7AddComment.browserUsed();
 		int commentLength = ldbcUpdate7AddComment.length();
@@ -104,8 +110,13 @@ OperationHandler<LdbcUpdate7AddComment, DbConnectionState> {
 						"\n" +
 						"}";
 
-		ryaClient.executeUpdateQuery(query);
-
+		try {
+			TupleQuery tupleQuery = conn.prepareTupleQuery(
+					QueryLanguage.SPARQL, query);
+			tupleQuery.evaluate();
+		} catch (RepositoryException | MalformedQueryException | QueryEvaluationException e) {
+			e.printStackTrace();
+		}
 		resultReporter.report(0, LdbcNoResult.INSTANCE, ldbcUpdate7AddComment);
 	}
 }

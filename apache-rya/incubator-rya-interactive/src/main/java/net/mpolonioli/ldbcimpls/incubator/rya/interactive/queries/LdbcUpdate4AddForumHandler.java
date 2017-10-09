@@ -4,6 +4,13 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQuery;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
+
 import com.ldbc.driver.DbConnectionState;
 import com.ldbc.driver.DbException;
 import com.ldbc.driver.OperationHandler;
@@ -11,7 +18,6 @@ import com.ldbc.driver.ResultReporter;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcNoResult;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcUpdate4AddForum;
 
-import net.mpolonioli.ldbcimpls.incubator.rya.interactive.RyaClient;
 import net.mpolonioli.ldbcimpls.incubator.rya.interactive.RyaConnectionState;
 
 public class LdbcUpdate4AddForumHandler implements
@@ -24,12 +30,12 @@ OperationHandler<LdbcUpdate4AddForum, DbConnectionState> {
 			DbConnectionState dbConnectionState,
 			ResultReporter resultReporter) throws DbException {
 
-		RyaClient ryaClient = (((RyaConnectionState) dbConnectionState).getClient());
+		RepositoryConnection conn = (((RyaConnectionState) dbConnectionState).getClient());
 
 		List<Long> tagIds = ldbcUpdate4AddForum.tagIds();
 		long forumId = ldbcUpdate4AddForum.forumId();
 		String forumTitle = ldbcUpdate4AddForum.forumTitle();
-		String creationDate = creationDateFormat.format(ldbcUpdate4AddForum.creationDate()) + ":00";
+		String creationDate = creationDateFormat.format(ldbcUpdate4AddForum.creationDate());
 		long moderatorId = ldbcUpdate4AddForum.moderatorPersonId();
 
 		String insertClause = 
@@ -73,8 +79,13 @@ OperationHandler<LdbcUpdate4AddForum, DbConnectionState> {
 						whereClause +
 						"}";
 
-		ryaClient.executeUpdateQuery(query);
-
+		try {
+			TupleQuery tupleQuery = conn.prepareTupleQuery(
+					QueryLanguage.SPARQL, query);
+			tupleQuery.evaluate();
+		} catch (RepositoryException | MalformedQueryException | QueryEvaluationException e) {
+			e.printStackTrace();
+		}
 		resultReporter.report(0, LdbcNoResult.INSTANCE, ldbcUpdate4AddForum);
 	}
 }

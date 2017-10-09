@@ -3,6 +3,13 @@ package net.mpolonioli.ldbcimpls.incubator.rya.interactive.queries;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQuery;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
+
 import com.ldbc.driver.DbConnectionState;
 import com.ldbc.driver.DbException;
 import com.ldbc.driver.OperationHandler;
@@ -10,7 +17,6 @@ import com.ldbc.driver.ResultReporter;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcNoResult;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcUpdate2AddPostLike;
 
-import net.mpolonioli.ldbcimpls.incubator.rya.interactive.RyaClient;
 import net.mpolonioli.ldbcimpls.incubator.rya.interactive.RyaConnectionState;
 
 public class LdbcUpdate2AddPostLikeHandler implements
@@ -22,11 +28,11 @@ OperationHandler<LdbcUpdate2AddPostLike, DbConnectionState> {
 			LdbcUpdate2AddPostLike ldbcUpdate2AddPostLike,
 			DbConnectionState dbConnectionState,
 			ResultReporter resultReporter) throws DbException {
-		RyaClient ryaClient = (((RyaConnectionState) dbConnectionState).getClient());
+		RepositoryConnection conn = (((RyaConnectionState) dbConnectionState).getClient());
 
 		long postId = ldbcUpdate2AddPostLike.postId();
 		long personId = ldbcUpdate2AddPostLike.personId();
-		String creationDate = creationDateFormat.format(ldbcUpdate2AddPostLike.creationDate()) + ":00";
+		String creationDate = creationDateFormat.format(ldbcUpdate2AddPostLike.creationDate());
 		String query = 
 				"PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>\n" + 
 						"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n" + 
@@ -50,7 +56,13 @@ OperationHandler<LdbcUpdate2AddPostLike, DbConnectionState> {
 						"}"
 						;
 
-		ryaClient.executeUpdateQuery(query);
+		try {
+			TupleQuery tupleQuery = conn.prepareTupleQuery(
+					QueryLanguage.SPARQL, query);
+			tupleQuery.evaluate();
+		} catch (RepositoryException | MalformedQueryException | QueryEvaluationException e) {
+			e.printStackTrace();
+		}
 
 		resultReporter.report(0, LdbcNoResult.INSTANCE, ldbcUpdate2AddPostLike);
 	}

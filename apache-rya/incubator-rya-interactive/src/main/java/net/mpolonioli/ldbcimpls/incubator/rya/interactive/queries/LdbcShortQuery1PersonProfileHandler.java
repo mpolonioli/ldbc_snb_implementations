@@ -4,9 +4,14 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.openrdf.query.BindingSet;
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQuery;
+import org.openrdf.query.TupleQueryResult;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
 
 import com.ldbc.driver.DbConnectionState;
 import com.ldbc.driver.DbException;
@@ -15,7 +20,6 @@ import com.ldbc.driver.ResultReporter;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcShortQuery1PersonProfile;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcShortQuery1PersonProfileResult;
 
-import net.mpolonioli.ldbcimpls.incubator.rya.interactive.RyaClient;
 import net.mpolonioli.ldbcimpls.incubator.rya.interactive.RyaConnectionState;
 
 public class LdbcShortQuery1PersonProfileHandler implements OperationHandler<LdbcShortQuery1PersonProfile, DbConnectionState> {
@@ -28,7 +32,7 @@ public class LdbcShortQuery1PersonProfileHandler implements OperationHandler<Ldb
 			DbConnectionState dbConnectionState,
 			ResultReporter resultReporter) throws DbException {
 
-		RyaClient ryaClient = (((RyaConnectionState) dbConnectionState).getClient());
+		RepositoryConnection conn = (((RyaConnectionState) dbConnectionState).getClient());
 
 		LdbcShortQuery1PersonProfileResult result = null;
 
@@ -36,64 +40,64 @@ public class LdbcShortQuery1PersonProfileHandler implements OperationHandler<Ldb
 
 		String query =
 				"PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>\n" + 
-						"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n" + 
-						"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" + 
-						"\n" + 
-						"SELECT ?firstName ?lastName ?birthday ?locationIp ?browserUsed ?placeId ?gender ?creationDate \n" + 
-						"WHERE {\n" + 
-						"?person rdf:type snvoc:Person ;\n" + 
-						"	snvoc:id \"" + id + "\"^^xsd:long ;\n" + 
-						"	snvoc:firstName ?firstName ;\n" + 
-						"	snvoc:lastName ?lastName ;\n" + 
-						"	snvoc:birthday ?birthday ;\n" + 
-						"	snvoc:locationIP ?locationIp ;\n" + 
-						"	snvoc:browserUsed ?browserUsed ;\n" + 
-						"	snvoc:gender ?gender ;\n" + 
-						"	snvoc:creationDate ?creationDate ;\n" + 
-						"	snvoc:isLocatedIn ?place .\n" + 
-						"\n" + 
-						"?place snvoc:id ?placeId .\n" + 
-						"}"
+				"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n" + 
+				"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" + 
+				"\n" + 
+				"SELECT ?firstName ?lastName ?birthday ?locationIp ?browserUsed ?placeId ?gender ?creationDate \n" + 
+				"WHERE {\n" + 
+				"?person snvoc:id \"" + id  + "\"^^xsd:long ; \n" + 
+				"	rdf:type snvoc:Person ;\n" + 
+				"	snvoc:firstName ?firstName ;\n" + 
+				"	snvoc:lastName ?lastName ;\n" + 
+				"	snvoc:birthday ?birthday ;\n" + 
+				"	snvoc:locationIP ?locationIp ;\n" + 
+				"	snvoc:browserUsed ?browserUsed ;\n" + 
+				"	snvoc:gender ?gender ;\n" + 
+				"	snvoc:creationDate ?creationDate ;\n" + 
+				"	snvoc:isLocatedIn ?place .\n" + 
+				"\n" + 
+				"?place snvoc:id ?placeId .\n" + 
+				"}"
 						;
 
-
-		JSONArray jsonBindings = ryaClient.executeReadQuery(query);
-
-		if (jsonBindings.length() == 1)
-		{
-			JSONObject jsonObject = jsonBindings.getJSONObject(0);
-
-			String firstName = jsonObject.getJSONObject("firstName").getString("value");
-			String lastName = jsonObject.getJSONObject("lastName").getString("value");
-			String locationIp = jsonObject.getJSONObject("locationIp").getString("value");
-			String browserUsed = jsonObject.getJSONObject("browserUsed").getString("value");
-			String gender = jsonObject.getJSONObject("gender").getString("value");
-			long placeId = jsonObject.getJSONObject("placeId").getLong("value");
-
-			long birthday = 0;
-			try {
-				birthday = birthdateDateFormat.parse(jsonObject.getJSONObject("birthday").getString("value")).getTime();
-			} catch (JSONException e) {
-				e.printStackTrace();
-			} catch (ParseException e) {
-				e.printStackTrace();
-			}
-			long creationDate = 0;
-			try {
-				creationDate = creationDateFormat.parse(jsonObject.getJSONObject("creationDate").getString("value")).getTime();
-			} catch (JSONException e) {
-				e.printStackTrace();
-			} catch (ParseException e) {
-				e.printStackTrace();
-			}
-
-			result = new LdbcShortQuery1PersonProfileResult(firstName, lastName, birthday, locationIp, browserUsed, placeId, gender, creationDate);
-			resultReporter.report(1, result, ldbcShortQuery1PersonProfile);
+		TupleQuery tupleQuery = null;
+		try {
+			tupleQuery = conn.prepareTupleQuery(
+					QueryLanguage.SPARQL, query);
+		} catch (RepositoryException | MalformedQueryException e) {
+			e.printStackTrace();
 		}
-		else
-		{
-			result = new LdbcShortQuery1PersonProfileResult("none", "none", -1, "none", "none", -1, "none", -1);
-			resultReporter.report(-1, result, ldbcShortQuery1PersonProfile);
+
+		TupleQueryResult tupleQueryResult = null;
+		try {
+			tupleQueryResult = tupleQuery.evaluate();
+		} catch (QueryEvaluationException e) {
+			e.printStackTrace();
 		}
+
+		try {
+			if(tupleQueryResult.hasNext())
+			{
+				BindingSet bindingSet = tupleQueryResult.next();
+				
+				String firstName = bindingSet.getValue("firstName").stringValue();
+				String lastName = bindingSet.getValue("lastName").stringValue();
+				long birthday = birthdateDateFormat.parse(bindingSet.getValue("birthday").stringValue()).getTime();
+				long creationDate = creationDateFormat.parse(bindingSet.getValue("creationDate").stringValue()).getTime();
+				String locationIp = bindingSet.getValue("locationIp").stringValue();
+				String browserUsed = bindingSet.getValue("browserUsed").stringValue();
+				String gender = bindingSet.getValue("gender").stringValue();
+				long placeId = Long.parseLong(bindingSet.getValue("placeId").stringValue());
+				
+				result = new LdbcShortQuery1PersonProfileResult(firstName, lastName, birthday, locationIp, browserUsed, placeId, gender, creationDate);
+			}else
+			{
+				result = new LdbcShortQuery1PersonProfileResult("null", "null", 0, "null", "null", 0, "null", 0);
+			}
+		}catch (QueryEvaluationException | ParseException e) {
+			e.printStackTrace();
+			result = new LdbcShortQuery1PersonProfileResult("null", "null", 0, "null", "null", 0, "null", 0);
+		}
+		resultReporter.report(1, result, ldbcShortQuery1PersonProfile);
 	}
 }

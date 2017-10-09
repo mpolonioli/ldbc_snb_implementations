@@ -5,6 +5,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQuery;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
+
 import com.ldbc.driver.DbConnectionState;
 import com.ldbc.driver.DbException;
 import com.ldbc.driver.OperationHandler;
@@ -12,7 +19,6 @@ import com.ldbc.driver.ResultReporter;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcNoResult;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcUpdate1AddPerson;
 
-import net.mpolonioli.ldbcimpls.incubator.rya.interactive.RyaClient;
 import net.mpolonioli.ldbcimpls.incubator.rya.interactive.RyaConnectionState;
 
 public class LdbcUpdate1AddPersonHandler implements
@@ -28,7 +34,7 @@ OperationHandler<LdbcUpdate1AddPerson, DbConnectionState> {
 					throws DbException {
 
 		// get the client able to execute the query
-		RyaClient client = (((RyaConnectionState) dbConnectionState).getClient());
+		RepositoryConnection conn = (((RyaConnectionState) dbConnectionState).getClient());
 
 		// prepare the update query
 		String insertClause = "";
@@ -162,7 +168,7 @@ OperationHandler<LdbcUpdate1AddPerson, DbConnectionState> {
 						"snvoc:birthday \"" + birthdateDateFormat.format(ldbcUpdate1AddPerson.birthday()) + "\"^^xsd:date ;\n" + 
 						"snvoc:locationIp \"" + ldbcUpdate1AddPerson.locationIp() + "\" ;\n" + 
 						"snvoc:browserUsed \"" + ldbcUpdate1AddPerson.browserUsed() + "\" ;\n" + 
-						"snvoc:creationDate \"" + creationDateFormat.format(ldbcUpdate1AddPerson.creationDate()) + ":00\"^^xsd:dateTime ."
+						"snvoc:creationDate \"" + creationDateFormat.format(ldbcUpdate1AddPerson.creationDate()) + "\"^^xsd:dateTime ."
 						;
 
 		query = 
@@ -185,8 +191,14 @@ OperationHandler<LdbcUpdate1AddPerson, DbConnectionState> {
 
 
 		// execute the update query
-		client.executeUpdateQuery(query);
-
+		try {
+			TupleQuery tupleQuery = conn.prepareTupleQuery(
+					QueryLanguage.SPARQL, query);
+			tupleQuery.evaluate();
+		} catch (RepositoryException | MalformedQueryException | QueryEvaluationException e) {
+			e.printStackTrace();
+		}
+		
 		// report the result
 		resultReporter.report(0, LdbcNoResult.INSTANCE, ldbcUpdate1AddPerson);
 	}
