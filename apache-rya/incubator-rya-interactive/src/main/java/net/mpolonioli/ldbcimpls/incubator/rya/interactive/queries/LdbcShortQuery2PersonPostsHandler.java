@@ -74,7 +74,7 @@ public class LdbcShortQuery2PersonPostsHandler implements OperationHandler<LdbcS
 				"\n" + 
 				"?comment (snvoc:replyOf)+ ?originalMessage .\n" + 
 				"\n" + 
-				"?originalMessage snvoc:Post :\n" + 
+				"?originalMessage rdf:type snvoc:Post ;\n" + 
 				"	snvoc:id ?postId ;\n" + 
 				"	snvoc:hasCreator ?originalMessagePerson .\n" + 
 				"\n" + 

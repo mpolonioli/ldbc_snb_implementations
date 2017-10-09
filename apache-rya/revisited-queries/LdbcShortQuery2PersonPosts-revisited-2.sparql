@@ -37,7 +37,7 @@ UNION
 
 ?comment (snvoc:replyOf)+ ?originalMessage .
 
-?originalMessage snvoc:Post :
+?originalMessage rdf:type snvoc:Post ;
 	snvoc:id ?postId ;
 	snvoc:hasCreator ?originalMessagePerson .
 
