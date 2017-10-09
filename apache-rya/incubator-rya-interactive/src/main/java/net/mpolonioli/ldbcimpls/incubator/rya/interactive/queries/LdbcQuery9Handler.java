@@ -42,13 +42,9 @@ public class LdbcQuery9Handler implements OperationHandler<LdbcQuery9, DbConnect
 		String maxDate = creationDateFormat.format(ldbcQuery9.maxDate());
 
 		String query =
-				"PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>\n" + 
+						"PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>\n" + 
 						"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" + 
 						"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n" + 
-						"\n" + 
-						"SELECT ?personId ?firstName ?lastName ?messageId ?content ?messageDate\n" + 
-						"WHERE {\n" + 
-						"{\n" + 
 						"SELECT DISTINCT ?personId ?firstName ?lastName ?messageId ?content ?messageDate\n" + 
 						"WHERE\n" + 
 						"{\n" + 

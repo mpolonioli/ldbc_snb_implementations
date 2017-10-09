@@ -7,9 +7,6 @@ PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-SELECT ?personId ?firstName ?lastName ?messageId ?content ?messageDate
-WHERE {
-{
 SELECT DISTINCT ?personId ?firstName ?lastName ?messageId ?content ?messageDate
 WHERE
 {
