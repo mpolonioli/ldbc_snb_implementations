@@ -3,8 +3,14 @@ package net.mpolonioli.ldbcimpls.incubator.rya.interactive.queries;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.openrdf.query.BindingSet;
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQuery;
+import org.openrdf.query.TupleQueryResult;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
 
 import com.ldbc.driver.DbConnectionState;
 import com.ldbc.driver.DbException;
@@ -13,7 +19,6 @@ import com.ldbc.driver.ResultReporter;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcQuery11;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcQuery11Result;
 
-import net.mpolonioli.ldbcimpls.incubator.rya.interactive.RyaClient;
 import net.mpolonioli.ldbcimpls.incubator.rya.interactive.RyaConnectionState;
 
 public class LdbcQuery11Handler implements OperationHandler<LdbcQuery11, DbConnectionState> {
@@ -23,10 +28,9 @@ public class LdbcQuery11Handler implements OperationHandler<LdbcQuery11, DbConne
 			DbConnectionState dbConnectionState,
 			ResultReporter resultReporter) throws DbException {
 
-		RyaClient ryaClient = (((RyaConnectionState) dbConnectionState).getClient());
+		RepositoryConnection conn = (((RyaConnectionState) dbConnectionState).getClient());
 
-		List<LdbcQuery11Result> resultList = new ArrayList<LdbcQuery11Result>();
-		int resultsCount = 0;
+		List<LdbcQuery11Result> result = new ArrayList<LdbcQuery11Result>();
 
 		long id = ldbcQuery11.personId();
 		int limit = ldbcQuery11.limit();
@@ -40,13 +44,16 @@ public class LdbcQuery11Handler implements OperationHandler<LdbcQuery11, DbConne
 						"PREFIX foaf: <http://xmlns.com/foaf/0.1/>\n" + 
 						"\n" + 
 						"SELECT DISTINCT ?personId ?firstName ?lastName ?companyName ?classYear\n" + 
-						"WHERE {\n" + 
+						"WHERE\n" + 
 						"{\n" + 
-						"?person rdf:type snvoc:Person ;\n" + 
-						"	snvoc:id \"" + id + "\"^^xsd:long ;\n" + 
-						"	snvoc:knows ?knowObject .\n" + 
+						"?person snvoc:id \"" + id + "\"^^xsd:long ;\n" + 
+						"	rdf:type snvoc:Person .\n" + 
 						"\n" + 
-						"?knowObject snvoc:hasPerson ?friend .\n" + 
+						"?person \n" + 
+						"	(snvoc:knows/snvoc:hasPerson)|\n" + 
+						"	(snvoc:knows/snvoc:hasPerson/snvoc:knows/snvoc:hasPerson) \n" + 
+						"		?friend .\n" + 
+						"FILTER ( ?person != ?friend )\n" + 
 						"\n" + 
 						"?friend snvoc:id ?personId ;\n" + 
 						"	snvoc:workAt ?workObject ;\n" + 
@@ -55,62 +62,48 @@ public class LdbcQuery11Handler implements OperationHandler<LdbcQuery11, DbConne
 						"\n" + 
 						"?workObject snvoc:hasOrganisation ?company ;\n" + 
 						"	snvoc:workFrom ?classYear .\n" + 
+						"FILTER(?classYear < " + workFromYear + ")\n" + 
 						"\n" + 
 						"?company snvoc:isLocatedIn ?country ;\n" + 
 						"	foaf:name ?companyName .\n" + 
 						"\n" + 
 						"?country foaf:name \"" + countryName + "\" .\n" + 
-						"\n" + 
-						"FILTER(?classYear < " + workFromYear + ")\n" + 
-						"}\n" + 
-						"UNION\n" + 
-						"{\n" + 
-						"?person rdf:type snvoc:Person ;\n" + 
-						"	snvoc:id \"" + id + "\"^^xsd:long ;\n" + 
-						"	snvoc:knows ?knowObject1 .\n" + 
-						"\n" + 
-						"?knowObject1 snvoc:hasPerson ?friend1 .\n" + 
-						"\n" + 
-						"?friend1 snvoc:knows ?knowObject2 .\n" + 
-						"\n" + 
-						"?knowObject2 snvoc:hasPerson ?friend2 .\n" + 
-						"\n" + 
-						"?friend2 snvoc:id ?personId ;\n" + 
-						"	snvoc:workAt ?workObject ;\n" + 
-						"	snvoc:firstName ?firstName ;\n" + 
-						"	snvoc:lastName ?lastName .\n" + 
-						"\n" + 
-						"?workObject snvoc:hasOrganisation ?company ;\n" + 
-						"	snvoc:workFrom ?classYear .\n" + 
-						"\n" + 
-						"?company snvoc:isLocatedIn ?country ;\n" + 
-						"	foaf:name ?companyName .\n" + 
-						"\n" + 
-						"?country foaf:name \"" + countryName + "\" .\n" + 
-						"\n" + 
-						"FILTER(?friend2 != ?person)\n" + 
-						"FILTER(?classYear < " + workFromYear + ")\n" + 
-						"}\n" + 
 						"}\n" + 
 						"ORDER BY ASC(?classYear) ASC(?personId) DESC(?companyName)\n" + 
 						"LIMIT " + limit
 						;
 
-		JSONArray jsonBindings = ryaClient.executeReadQuery(query);
-
-		resultsCount = jsonBindings.length();
-
-		for(int i = 0; i < resultsCount; i++) {
-			JSONObject jsonObject = jsonBindings.getJSONObject(i);
-
-			long personId = jsonObject.getJSONObject("personId").getLong("value");
-			String firstName = jsonObject.getJSONObject("firstName").getString("value");
-			String lastName = jsonObject.getJSONObject("lastName").getString("value");
-			String organizationName = jsonObject.getJSONObject("companyName").getString("value");
-			int organizationWorkFromYear = jsonObject.getJSONObject("classYear").getInt("value");
-
-			resultList.add(new LdbcQuery11Result(personId, firstName, lastName, organizationName, organizationWorkFromYear));
+		TupleQuery tupleQuery = null;
+		try {
+			tupleQuery = conn.prepareTupleQuery(
+					QueryLanguage.SPARQL, query);
+		} catch (RepositoryException | MalformedQueryException e) {
+			e.printStackTrace();
 		}
-		resultReporter.report(resultsCount, resultList, ldbcQuery11);
+
+		TupleQueryResult tupleQueryResult = null;
+		try {
+			tupleQueryResult = tupleQuery.evaluate();
+		} catch (QueryEvaluationException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			while(tupleQueryResult.hasNext())
+			{
+				BindingSet bindingSet = tupleQueryResult.next();
+				
+				long personId = Long.parseLong(bindingSet.getValue("personId").stringValue());
+				String firstName = bindingSet.getValue("firstName").stringValue();
+				String lastName = bindingSet.getValue("lastName").stringValue();
+				String organizationName = bindingSet.getValue("companyName").stringValue();
+				int organizationWorkFromYear = Integer.parseInt(bindingSet.getValue("classYear").stringValue());
+				
+				result.add(new LdbcQuery11Result(personId, firstName, lastName, organizationName, organizationWorkFromYear));
+			}
+		}catch (QueryEvaluationException e) {
+			e.printStackTrace();
+		}
+		resultReporter.report(result.size(), result, ldbcQuery11);
 	}
 }

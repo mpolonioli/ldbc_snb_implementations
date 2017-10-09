@@ -15,13 +15,7 @@ public class LdbcQuery13Handler implements OperationHandler<LdbcQuery13, DbConne
 			DbConnectionState dbConnectionState,
 			ResultReporter resultReporter) throws DbException {
 
-		// RyaClient client = (((RyaConnectionState) dbConnectionState).getClient());
-
 		LdbcQuery13Result result = new LdbcQuery13Result(-1);
-
-		// String query = "";
-
-		//JSONArray rd = client.executeQuery(query);
 
 		resultReporter.report(0, result, ldbcQuery13);
 	}

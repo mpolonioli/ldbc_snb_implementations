@@ -19,13 +19,7 @@ public class LdbcQuery10Handler implements OperationHandler<LdbcQuery10, DbConne
 			DbConnectionState dbConnectionState,
 			ResultReporter resultReporter) throws DbException {
 
-		//RyaClient client = (((RyaConnectionState) dbConnectionState).getClient());
-
 		List<LdbcQuery10Result> resultList = new ArrayList<LdbcQuery10Result>();
-
-		//String query = "";
-
-		//JSONArray rd = client.executeQuery(query);
 
 		resultReporter.report(0, resultList, ldbcQuery10);
 	}

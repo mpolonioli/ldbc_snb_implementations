@@ -3,6 +3,10 @@ package net.mpolonioli.ldbcimpls.incubator.rya.interactive;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.AccumuloSecurityException;
+import org.openrdf.repository.RepositoryException;
+
 import com.ldbc.driver.Db;
 import com.ldbc.driver.DbConnectionState;
 import com.ldbc.driver.DbException;
@@ -28,7 +32,11 @@ public class RyaDb extends Db{
 
 	@Override
 	protected void onInit(Map<String, String> ryaDbProperties, LoggingService log) throws DbException {
-		dbConnectionState = new RyaConnectionState("http://siti-rack.siti.disco.unimib.it:8080/web.rya/queryrdf", "http://siti-rack.siti.disco.unimib.it:8080/web.rya/loadrdf");
+		try {
+			dbConnectionState = new RyaConnectionState();
+		} catch (RepositoryException | AccumuloException | AccumuloSecurityException e) {
+			e.printStackTrace();
+		}
 		registerOperationHandler(LdbcQuery1.class, LdbcQuery1Handler.class);
 		registerOperationHandler(LdbcQuery2.class, LdbcQuery2Handler.class);
 		registerOperationHandler(LdbcQuery3.class, LdbcQuery3Handler.class);

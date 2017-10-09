@@ -6,9 +6,14 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.openrdf.query.BindingSet;
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQuery;
+import org.openrdf.query.TupleQueryResult;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
 
 import com.ldbc.driver.DbConnectionState;
 import com.ldbc.driver.DbException;
@@ -17,7 +22,6 @@ import com.ldbc.driver.ResultReporter;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcQuery9;
 import com.ldbc.driver.workloads.ldbc.snb.interactive.LdbcQuery9Result;
 
-import net.mpolonioli.ldbcimpls.incubator.rya.interactive.RyaClient;
 import net.mpolonioli.ldbcimpls.incubator.rya.interactive.RyaConnectionState;
 
 public class LdbcQuery9Handler implements OperationHandler<LdbcQuery9, DbConnectionState> {
@@ -29,14 +33,13 @@ public class LdbcQuery9Handler implements OperationHandler<LdbcQuery9, DbConnect
 			DbConnectionState dbConnectionState,
 			ResultReporter resultReporter) throws DbException {
 
-		RyaClient ryaClient = (((RyaConnectionState) dbConnectionState).getClient());
+		RepositoryConnection conn = (((RyaConnectionState) dbConnectionState).getClient());
 
-		List<LdbcQuery9Result> resultList = new ArrayList<LdbcQuery9Result>();
-		int resultsCount = 0;
+		List<LdbcQuery9Result> result = new ArrayList<LdbcQuery9Result>();
 
 		long id = ldbcQuery9.personId();
 		int limit = ldbcQuery9.limit();
-		String maxDate = creationDateFormat.format(ldbcQuery9.maxDate()) + ":00";
+		String maxDate = creationDateFormat.format(ldbcQuery9.maxDate());
 
 		String query =
 				"PREFIX snvoc: <http://www.ldbc.eu/ldbc_socialnet/1.0/vocabulary/>\n" + 
@@ -47,120 +50,66 @@ public class LdbcQuery9Handler implements OperationHandler<LdbcQuery9, DbConnect
 						"WHERE {\n" + 
 						"{\n" + 
 						"SELECT DISTINCT ?personId ?firstName ?lastName ?messageId ?content ?messageDate\n" + 
-						"WHERE {\n" + 
+						"WHERE\n" + 
 						"{\n" + 
-						"?person rdf:type snvoc:Person ;\n" + 
-						"	snvoc:id \"" + id + "\"^^xsd:long ;\n" + 
-						"	snvoc:knows ?knowObject .\n" + 
+						"?person snvoc:id \"" + id + "\"^^xsd:long ; \n" + 
+						"	rdf:type snvoc:Person .\n" + 
 						"\n" + 
-						"?knowObject snvoc:hasPerson ?friend .\n" + 
+						"?person \n" + 
+						"	(snvoc:knows/snvoc:hasPerson)|\n" + 
+						"	(snvoc:knows/snvoc:hasPerson/snvoc:knows/snvoc:hasPerson) \n" + 
+						"		?friend .\n" + 
+						"FILTER ( ?person != ?friend )\n" + 
 						"\n" + 
 						"?friend snvoc:id ?personId ;\n" + 
 						"	snvoc:firstName ?firstName ;\n" + 
 						"	snvoc:lastName ?lastName .\n" + 
 						"\n" + 
+						"VALUES (?messageType) { ( snvoc:Post ) ( snvoc:Comment ) }\n" + 
 						"?message snvoc:hasCreator ?friend ;\n" + 
-						"	rdf:type snvoc:Post ;\n" + 
+						"	rdf:type ?messageType ;\n" + 
 						"	snvoc:creationDate ?messageDate ;\n" + 
 						"	snvoc:id ?messageId ;\n" + 
-						"	snvoc:imageFile | snvoc:content ?content .\n" + 
+						"	snvoc:imageFile | snvoc:Content ?content .\n" + 
 						"\n" + 
-						"}\n" + 
-						"UNION\n" + 
-						"{\n" + 
-						"?person rdf:type snvoc:Person ;\n" + 
-						"	snvoc:id \"" + id + "\"^^xsd:long ;\n" + 
-						"	snvoc:knows ?knowObject .\n" + 
-						"\n" + 
-						"?knowObject snvoc:hasPerson ?friend .\n" + 
-						"\n" + 
-						"?friend snvoc:id ?personId ;\n" + 
-						"	snvoc:firstName ?firstName ;\n" + 
-						"	snvoc:lastName ?lastName .\n" + 
-						"\n" + 
-						"?message snvoc:hasCreator ?friend ;\n" + 
-						"	rdf:type snvoc:Comment ;\n" + 
-						"	snvoc:creationDate ?messageDate ;\n" + 
-						"	snvoc:id ?messageId ;\n" + 
-						"	snvoc:imageFile | snvoc:content ?content .\n" + 
-						"\n" + 
-						"}\n" + 
-						"UNION\n" + 
-						"{\n" + 
-						"?person rdf:type snvoc:Person ;\n" + 
-						"	snvoc:id \"" + id + "\"^^xsd:long ;\n" + 
-						"	snvoc:knows ?knowObject1 .\n" + 
-						"\n" + 
-						"?knowObject1 snvoc:hasPerson ?friend1 .\n" + 
-						"\n" + 
-						"?friend1 snvoc:knows ?knowObject2 .\n" + 
-						"\n" + 
-						"?knowObject2 snvoc:hasPerson ?friend2 .\n" + 
-						"\n" + 
-						"?friend2 snvoc:id ?personId ;\n" + 
-						"	snvoc:firstName ?firstName ;\n" + 
-						"	snvoc:lastName ?lastName .\n" + 
-						"\n" + 
-						"?message snvoc:hasCreator ?friend2 ;\n" + 
-						"	rdf:type snvoc:Post ;\n" + 
-						"	snvoc:creationDate ?messageDate ;\n" + 
-						"	snvoc:id ?messageId ;\n" + 
-						"	snvoc:imageFile | snvoc:content ?content .\n" + 
-						"}\n" + 
-						"UNION\n" + 
-						"{\n" + 
-						"?person rdf:type snvoc:Person ;\n" + 
-						"	snvoc:id \"" + id + "\"^^xsd:long ;\n" + 
-						"	snvoc:knows ?knowObject1 .\n" + 
-						"\n" + 
-						"?knowObject1 snvoc:hasPerson ?friend1 .\n" + 
-						"\n" + 
-						"?friend1 snvoc:knows ?knowObject2 .\n" + 
-						"\n" + 
-						"?knowObject2 snvoc:hasPerson ?friend2 .\n" + 
-						"\n" + 
-						"?friend2 snvoc:id ?personId ;\n" + 
-						"	snvoc:firstName ?firstName ;\n" + 
-						"	snvoc:lastName ?lastName .\n" + 
-						"\n" + 
-						"?message snvoc:hasCreator ?friend2 ;\n" + 
-						"	rdf:type snvoc:Comment ;\n" + 
-						"	snvoc:creationDate ?messageDate ;\n" + 
-						"	snvoc:id ?messageId ;\n" + 
-						"	snvoc:imageFile | snvoc:content ?content .\n" + 
-						"}\n" + 
-						"}\n" + 
-						"}\n" + 
-						"FILTER(?personId != \"" + id + "\"^^xsd:long)\n" + 
 						"FILTER(?messageDate < \"" + maxDate + "\"^^xsd:dateTime)\n" + 
 						"}\n" + 
 						"ORDER BY DESC(?creationDate) ASC(?messageId)\n" + 
 						"LIMIT " + limit
 						;
 
-		JSONArray jsonBindings = ryaClient.executeReadQuery(query);
-
-		resultsCount = jsonBindings.length();
-
-		for(int i = 0; i < resultsCount; i++) {
-			JSONObject jsonObject = jsonBindings.getJSONObject(i);
-
-			long messageDate = 0;
-			try {
-				messageDate = creationDateFormat.parse(jsonObject.getJSONObject("messageDate").getString("value")).getTime();
-			} catch (JSONException e) {
-				e.printStackTrace();
-			} catch (ParseException e) {
-				e.printStackTrace();
-			}
-			long personId = jsonObject.getJSONObject("personId").getLong("value");
-			long messageId = jsonObject.getJSONObject("messageId").getLong("value");
-			String firstName = jsonObject.getJSONObject("firstName").getString("value");
-			String lastName = jsonObject.getJSONObject("lastName").getString("value");
-			String content = jsonObject.getJSONObject("content").getString("value");
-
-			resultList.add(new LdbcQuery9Result(personId, firstName, lastName, messageId, content, messageDate));
+		TupleQuery tupleQuery = null;
+		try {
+			tupleQuery = conn.prepareTupleQuery(
+					QueryLanguage.SPARQL, query);
+		} catch (RepositoryException | MalformedQueryException e) {
+			e.printStackTrace();
 		}
-		resultReporter.report(resultsCount, resultList, ldbcQuery9);
+
+		TupleQueryResult tupleQueryResult = null;
+		try {
+			tupleQueryResult = tupleQuery.evaluate();
+		} catch (QueryEvaluationException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			while(tupleQueryResult.hasNext())
+			{
+				BindingSet bindingSet = tupleQueryResult.next();
+				
+				long personId = Long.parseLong(bindingSet.getValue("personId").stringValue());
+				long messageId = Long.parseLong(bindingSet.getValue("messageId").stringValue());
+				long messageDate = creationDateFormat.parse(bindingSet.getValue("messageDate").stringValue()).getTime();
+				String firstName = bindingSet.getValue("firstName").stringValue();
+				String lastName = bindingSet.getValue("lastName").stringValue();
+				String content = bindingSet.getValue("content").stringValue();
+				
+				result.add(new LdbcQuery9Result(personId, firstName, lastName, messageId, content, messageDate));
+			}
+		}catch (QueryEvaluationException | ParseException e) {
+			e.printStackTrace();
+		}
+		resultReporter.report(result.size(), result, ldbcQuery9);
 	}
 }

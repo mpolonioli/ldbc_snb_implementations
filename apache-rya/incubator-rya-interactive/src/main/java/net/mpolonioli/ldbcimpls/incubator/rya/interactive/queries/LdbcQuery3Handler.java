@@ -18,13 +18,7 @@ public class LdbcQuery3Handler implements OperationHandler<LdbcQuery3, DbConnect
 			DbConnectionState dbConnectionState,
 			ResultReporter resultReporter) throws DbException {
 
-		// RyaClient client = (((RyaConnectionState) dbConnectionState).getClient());
-
 		List<LdbcQuery3Result> resultList = new ArrayList<LdbcQuery3Result>();
-
-		// String query = "";
-
-		//JSONArray rd = client.executeQuery(query);
 
 		resultReporter.report(0, resultList, ldbcQuery3);
 	}

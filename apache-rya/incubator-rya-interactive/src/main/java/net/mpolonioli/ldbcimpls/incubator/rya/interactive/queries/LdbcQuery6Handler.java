@@ -18,13 +18,7 @@ public class LdbcQuery6Handler implements OperationHandler<LdbcQuery6, DbConnect
 			DbConnectionState dbConnectionState,
 			ResultReporter resultReporter) throws DbException {
 
-		//RyaClient client = (((RyaConnectionState) dbConnectionState).getClient());
-
 		List<LdbcQuery6Result> resultList = new ArrayList<LdbcQuery6Result>();
-
-		//String query = "";
-
-		//JSONArray rd = client.executeQuery(query);
 
 		resultReporter.report(0, resultList, ldbcQuery6);
 	}
