@@ -47,7 +47,7 @@ implements OperationHandler<LdbcShortQuery3PersonFriends, DbConnectionState> {
 				"SELECT ?personId ?personFirstname ?personLastName ?knowCreationDate\n" + 
 				"WHERE \n" + 
 				"{\n" + 
-				"?person snvoc:id \"" + id + "\"^^xsd:long \n" + 
+				"?person snvoc:id \"" + id + "\"^^xsd:long ;\n" + 
 				"	rdf:type snvoc:Person .\n" + 
 				"\n" + 
 				"?person snvoc:knows ?knowObject .\n" + 

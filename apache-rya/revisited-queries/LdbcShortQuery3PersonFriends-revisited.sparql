@@ -9,7 +9,7 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 SELECT ?personId ?personFirstname ?personLastName ?knowCreationDate
 WHERE 
 {
-?person snvoc:id "6597069766733"^^xsd:long 
+?person snvoc:id "6597069766733"^^xsd:long ;
 	rdf:type snvoc:Person .
 
 ?person snvoc:knows ?knowObject .
