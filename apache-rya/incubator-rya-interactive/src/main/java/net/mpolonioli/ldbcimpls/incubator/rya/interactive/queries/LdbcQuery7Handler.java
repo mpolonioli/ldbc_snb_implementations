@@ -50,7 +50,6 @@ public class LdbcQuery7Handler implements OperationHandler<LdbcQuery7, DbConnect
 						"{\n" + 
 						"?person snvoc:id \"" + id + "\"^^xsd:long ; \n" + 
 						"	rdf:type snvoc:Person .\n" + 
-						"	 .\n" + 
 						"\n" + 
 						"VALUES (?messageType) { ( snvoc:Post ) ( snvoc:Comment ) }\n" + 
 						"?post snvoc:hasCreator ?person ;\n" + 

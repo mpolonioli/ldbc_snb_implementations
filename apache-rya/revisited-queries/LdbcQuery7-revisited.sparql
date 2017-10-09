@@ -15,7 +15,6 @@ WHERE
 {
 ?person snvoc:id "26388279066636"^^xsd:long ; 
 	rdf:type snvoc:Person .
-	 .
 
 VALUES (?messageType) { ( snvoc:Post ) ( snvoc:Comment ) }
 ?post snvoc:hasCreator ?person ;
