@@ -5,9 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 import org.openrdf.query.MalformedQueryException;
-import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.QueryLanguage;
-import org.openrdf.query.TupleQuery;
 import org.openrdf.query.Update;
 import org.openrdf.query.UpdateExecutionException;
 import org.openrdf.repository.RepositoryConnection;
