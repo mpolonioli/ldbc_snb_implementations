@@ -19,7 +19,7 @@ WHERE
 
 ?person 
 	(snvoc:knows/snvoc:hasPerson)|
-	(snvoc:knows/snvoc:hasPerson/snvoc:knows/snvoc:hasPerson)|
+	(snvoc:knows/snvoc:hasPerson/snvoc:knows/snvoc:hasPerson)
 		?friend .
 FILTER ( ?person != ?friend )
 

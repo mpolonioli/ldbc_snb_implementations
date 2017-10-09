@@ -57,7 +57,7 @@ public class LdbcQuery5Handler implements OperationHandler<LdbcQuery5, DbConnect
 				"\n" + 
 				"?person \n" + 
 				"	(snvoc:knows/snvoc:hasPerson)|\n" + 
-				"	(snvoc:knows/snvoc:hasPerson/snvoc:knows/snvoc:hasPerson)|\n" + 
+				"	(snvoc:knows/snvoc:hasPerson/snvoc:knows/snvoc:hasPerson)\n" + 
 				"		?friend .\n" + 
 				"FILTER ( ?person != ?friend )\n" + 
 				"\n" + 
