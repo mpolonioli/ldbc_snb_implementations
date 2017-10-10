@@ -18,14 +18,15 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 public class JanusGraphImporter {
 	private static final Logger logger =
@@ -34,90 +35,121 @@ public class JanusGraphImporter {
 	private static final long TX_MAX_RETRIES = 1000;
 
 	public static void loadVertices(Graph graph, Path filePath, 
-			boolean printLoadingDots, int batchSize, long progReportPeriod) 
-					throws IOException, java.text.ParseException {
+			boolean printLoadingDots, int batchSize, long progReportPeriod, int threadCount) 
+					throws IOException, java.text.ParseException, InterruptedException {
 
-		String[] colNames = null;
-		Map<Object, Object> propertiesMap;
-		SimpleDateFormat birthdayDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		birthdayDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-		SimpleDateFormat creationDateDateFormat = 
-				new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-		creationDateDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 		String fileNameParts[] = filePath.getFileName().toString().split("_");
 		String entityName = fileNameParts[0];
 
 		List<String> lines = Files.readAllLines(filePath);
-		colNames = lines.get(0).split("\\|");
+		final String[] colNames = lines.get(0).split("\\|");
 		long lineCount = 0;
-		boolean txSucceeded;
-		long txFailCount;
 
 		// For progress reporting
 		long startTime = System.currentTimeMillis();
 		long nextProgReportTime = startTime + progReportPeriod*1000;
 		long lastLineCount = 0;
 
-		String idLabel = entityName + "Id";
-		if(idLabel.equals("postId") || idLabel.equals("commentId"))
-		{
-			idLabel = "messageId";
-		}
+		final String idLabel = (entityName.equals("post") || entityName.equals("comment"))?"messageId":(entityName + "Id");
 		for (int startIndex = 1; startIndex < lines.size(); 
 				startIndex += batchSize) {
-			int endIndex = Math.min(startIndex + batchSize, lines.size());
-			txSucceeded = false;
-			txFailCount = 0;
-			do {
-				for (int i = startIndex; i < endIndex; i++) {
-					String line = lines.get(i);
+			List<Thread> threads = new ArrayList<>();
+			for(int t = 0; t < threadCount; t++)
+			{
+				int threadStartIndex = startIndex + ((batchSize / threadCount) * t);
+				if(threadStartIndex >= lines.size())
+				{
+					break;
+				}
+				final List<String> threadLines = lines.subList(threadStartIndex, Math.min(threadStartIndex + (batchSize / threadCount), lines.size()));
 
-					String[] colVals = line.split("\\|");
-					propertiesMap = new HashMap<Object, Object>();
+				Thread thread = new Thread(new Runnable() {
 
-					for (int j = 0; j < colVals.length; ++j) {
-						
-						if (colNames[j].equals("id")) {
-							propertiesMap.put(idLabel, Long.parseLong(colVals[j]));
-						} else if (colNames[j].equals("birthday")) {
-							propertiesMap.put(colNames[j],
-									birthdayDateFormat.parse(colVals[j]).getTime());
-						} else if (colNames[j].equals("creationDate")) {
-							propertiesMap.put(colNames[j], 
-									creationDateDateFormat.parse(colVals[j]).getTime());
-						}else if (colNames[j].equals("length")) {
-							propertiesMap.put(colNames[j], Integer.parseInt(colVals[j]));
-						}else {
-							propertiesMap.put(colNames[j], colVals[j]);
-						}
+					private String[] lines = threadLines.toArray(new String[0]);
+
+					@Override
+					public void run() {
+
+						SimpleDateFormat birthdayDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+						birthdayDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+						SimpleDateFormat creationDateDateFormat = 
+								new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+						creationDateDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+						boolean txSucceeded = false;
+						int txFailCount = 0;
+						do {
+							for (int i = 0; i < lines.length; i++) {
+
+								String line = lines[i];
+
+								String[] colVals = line.split("\\|");
+								HashMap<Object, Object> propertiesMap = new HashMap<>();
+
+								for (int j = 0; j < colVals.length; ++j) {
+									if (colNames[j].equals("id")) {
+										propertiesMap.put(idLabel, Long.parseLong(colVals[j]));
+									} else if (colNames[j].equals("birthday")) {
+										try {
+											propertiesMap.put(colNames[j],
+													birthdayDateFormat.parse(colVals[j]).getTime());
+										} catch (ParseException e) {
+											e.printStackTrace();
+										}
+									} else if (colNames[j].equals("creationDate")) {
+										try {
+											propertiesMap.put(colNames[j], 
+													creationDateDateFormat.parse(colVals[j]).getTime());
+										} catch (ParseException e) {
+											e.printStackTrace();
+										}
+									}else if (colNames[j].equals("length")) {
+										propertiesMap.put(colNames[j], Integer.parseInt(colVals[j]));
+									}else {
+										propertiesMap.put(colNames[j], colVals[j]);
+									}
+								}
+
+								propertiesMap.put(T.label, entityName);
+
+								List<Object> keyValues = new ArrayList<Object>();
+								propertiesMap.forEach((key, val) -> {
+									keyValues.add(key);
+									keyValues.add(val);
+								});
+
+								graph.addVertex(keyValues.toArray());
+
+							}
+
+							try {
+								graph.tx().commit();
+								txSucceeded = true;
+							} catch (Exception e) {
+								txFailCount++;
+							}
+
+							if (txFailCount > TX_MAX_RETRIES) {
+								throw new RuntimeException(String.format(
+										"ERROR: Transaction failed %d times (file lines [%d,%d]), " +  
+												"aborting...", txFailCount, threadStartIndex, threadStartIndex + threadLines.size()-1));
+							}
+						} while (!txSucceeded);
+
 					}
+				});
 
-					propertiesMap.put(T.label, entityName);
+				thread.setName("t" + t);
+				threads.add(thread);
+				thread.start();				
+			}
+			for(Thread thread : threads)
+			{
+				thread.join();
+			}
 
-					List<Object> keyValues = new ArrayList<Object>();
-					propertiesMap.forEach((key, val) -> {
-						keyValues.add(key);
-						keyValues.add(val);
-					});
-
-					graph.addVertex(keyValues.toArray());
-
-					lineCount++;
-				}
-
-				try {
-					graph.tx().commit();
-					txSucceeded = true;
-				} catch (Exception e) {
-					txFailCount++;
-				}
-
-				if (txFailCount > TX_MAX_RETRIES) {
-					throw new RuntimeException(String.format(
-							"ERROR: Transaction failed %d times (file lines [%d,%d]), " +  
-									"aborting...", txFailCount, startIndex, endIndex-1));
-				}
-			} while (!txSucceeded);
+			lineCount += batchSize;
 
 			if (printLoadingDots && 
 					(System.currentTimeMillis() > nextProgReportTime)) {
@@ -133,65 +165,93 @@ public class JanusGraphImporter {
 	}
 
 	public static void loadProperties(Graph graph, Path filePath, 
-			boolean printLoadingDots, int batchSize, long progReportPeriod) 
-					throws IOException {
-		String[] colNames = null;
+			boolean printLoadingDots, int batchSize, long progReportPeriod, int threadCount) 
+					throws IOException, InterruptedException {
 		String fileNameParts[] = filePath.getFileName().toString().split("_");
 		String entityName = fileNameParts[0];
 
 		List<String> lines = Files.readAllLines(filePath);
-		colNames = lines.get(0).split("\\|");
+		final String[] colNames = lines.get(0).split("\\|");
 		long lineCount = 0;
-		boolean txSucceeded;
-		long txFailCount;
 
 		// For progress reporting
 		long startTime = System.currentTimeMillis();
 		long nextProgReportTime = startTime + progReportPeriod*1000;
 		long lastLineCount = 0;
 
-		String idLabel = entityName + "Id";
-		if(idLabel.equals("postId") || idLabel.equals("commentId"))
-		{
-			idLabel = "messageId";
-		}
+		final String idLabel = (entityName.equals("post") || entityName.equals("comment"))?"messageId":(entityName + "Id");
 		for (int startIndex = 1; startIndex < lines.size(); 
 				startIndex += batchSize) {
-			int endIndex = Math.min(startIndex + batchSize, lines.size());
-			txSucceeded = false;
-			txFailCount = 0;
-			do {
-				for (int i = startIndex; i < endIndex; i++) {
-					String line = lines.get(i);
+			List<Thread> threads = new ArrayList<>();
+			for(int t = 0; t < threadCount; t++)
+			{
+				int threadStartIndex = startIndex + ((batchSize / threadCount) * t);
+				if(threadStartIndex >= lines.size())
+				{
+					break;
+				}
+				final List<String> threadLines = lines.subList(threadStartIndex, Math.min(threadStartIndex + (batchSize / threadCount), lines.size()));
 
-					String[] colVals = line.split("\\|");
+				Thread thread = new Thread(new Runnable() {
 
-					GraphTraversalSource g = graph.traversal();
-					Vertex vertex = 
-							g.V().has(idLabel, Long.parseLong(colVals[0])).next();
+					private String[] lines = threadLines.toArray(new String[0]);
 
-					for (int j = 1; j < colVals.length; ++j) {
-						vertex.property(VertexProperty.Cardinality.list, colNames[j],
-								colVals[j]);
+					@Override
+					public void run() {
+
+						SimpleDateFormat birthdayDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+						birthdayDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+						SimpleDateFormat creationDateDateFormat = 
+								new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+						creationDateDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+						boolean txSucceeded = false;
+						int txFailCount = 0;
+						do {
+							for (int i = 0; i < lines.length; i++) {
+								String line = lines[i];
+
+								String[] colVals = line.split("\\|");
+
+								GraphTraversalSource g = graph.traversal();
+								Vertex vertex = 
+										g.V().has(idLabel, Long.parseLong(colVals[0])).next();
+
+								for (int j = 1; j < colVals.length; ++j) {
+									vertex.property(VertexProperty.Cardinality.list, colNames[j],
+											colVals[j]);
+								}
+
+							}
+
+							try {
+								graph.tx().commit();
+								txSucceeded = true;
+							} catch (Exception e) {
+								txFailCount++;
+							}
+
+							if (txFailCount > TX_MAX_RETRIES) {
+								throw new RuntimeException(String.format(
+										"ERROR: Transaction failed %d times (file lines [%d,%d]), " + 
+												"aborting...", txFailCount, threadStartIndex, threadLines.size()-1));
+							}
+						} while (!txSucceeded);
+
 					}
+				});
 
-					lineCount++;
-				}
+				thread.setName("t" + t);
+				threads.add(thread);
+				thread.start();				
+			}
+			for(Thread thread : threads)
+			{
+				thread.join();
+			}
 
-				try {
-					graph.tx().commit();
-					txSucceeded = true;
-				} catch (Exception e) {
-					txFailCount++;
-				}
-
-				if (txFailCount > TX_MAX_RETRIES) {
-					throw new RuntimeException(String.format(
-							"ERROR: Transaction failed %d times (file lines [%d,%d]), " + 
-									"aborting...", txFailCount, startIndex, endIndex-1));
-				}
-			} while (!txSucceeded);
-
+			lineCount += batchSize;
 			if (printLoadingDots && 
 					(System.currentTimeMillis() > nextProgReportTime)) {
 				long timeElapsed = System.currentTimeMillis() - startTime;
@@ -206,104 +266,134 @@ public class JanusGraphImporter {
 	}
 
 	public static void loadEdges(Graph graph, Path filePath, boolean undirected,
-			boolean printLoadingDots, int batchSize, long progReportPeriod) 
-					throws IOException,  java.text.ParseException {
-		String[] colNames = null;
-		Map<Object, Object> propertiesMap;
-		SimpleDateFormat creationDateDateFormat = 
-				new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-		creationDateDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-		SimpleDateFormat joinDateDateFormat = 
-				new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-		joinDateDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+			boolean printLoadingDots, int batchSize, long progReportPeriod, int threadCount) 
+					throws IOException,  java.text.ParseException, InterruptedException {
+
+
 		String fileNameParts[] = filePath.getFileName().toString().split("_");
 		String v1EntityName = fileNameParts[0];
 		String edgeLabel = fileNameParts[1];
 		String v2EntityName = fileNameParts[2];
 
 		List<String> lines = Files.readAllLines(filePath);
-		colNames = lines.get(0).split("\\|");
+		final String[] colNames = lines.get(0).split("\\|");
 		long lineCount = 0;
-		boolean txSucceeded;
-		long txFailCount;
 
 		// For progress reporting
 		long startTime = System.currentTimeMillis();
 		long nextProgReportTime = startTime + progReportPeriod*1000;
 		long lastLineCount = 0;
 
-		String idLabelV1 = v1EntityName + "Id";
-		if(idLabelV1.equals("postId") || idLabelV1.equals("commentId"))
-		{
-			idLabelV1 = "messageId";
-		}
-		String idLabelV2 = v2EntityName + "Id";
-		if(idLabelV2.equals("postId") || idLabelV2.equals("commentId"))
-		{
-			idLabelV2 = "messageId";
-		}
+		final String idLabelV1 = (v1EntityName.equals("post") || v1EntityName.equals("comment"))?"messageId":(v1EntityName + "Id");
+		final String idLabelV2 = (v2EntityName.equals("post") || v2EntityName.equals("comment"))?"messageId":(v2EntityName + "Id");
 		for (int startIndex = 1; startIndex < lines.size(); 
 				startIndex += batchSize) {
-			int endIndex = Math.min(startIndex + batchSize, lines.size());
-			txSucceeded = false;
-			txFailCount = 0;
-			do {
-				for (int i = startIndex; i < endIndex; i++) {
-					String line = lines.get(i);
+			List<Thread> threads = new ArrayList<>();
+			for(int t = 0; t < threadCount; t++)
+			{
+				int threadStartIndex = startIndex + ((batchSize / threadCount) * t);
+				if(threadStartIndex >= lines.size())
+				{
+					break;
+				}
+				final List<String> threadLines = lines.subList(threadStartIndex, Math.min(threadStartIndex + (batchSize / threadCount), lines.size()));
 
-					String[] colVals = line.split("\\|");
+				Thread thread = new Thread(new Runnable() {
 
-					GraphTraversalSource g = graph.traversal();
-					Vertex vertex1 = 
-							g.V().has(idLabelV1, Long.parseLong(colVals[0])).next();
-					Vertex vertex2 = 
-							g.V().has(idLabelV2, Long.parseLong(colVals[1])).next();
+					private String[] lines = threadLines.toArray(new String[0]);
 
-					propertiesMap = new HashMap<Object, Object>();
-					for (int j = 2; j < colVals.length; ++j) {
-						if (colNames[j].equals("creationDate")) {
-							propertiesMap.put(colNames[j], 
-									creationDateDateFormat.parse(colVals[j]).getTime());
-						} else if (colNames[j].equals("joinDate")) {
-							propertiesMap.put(colNames[j], 
-									joinDateDateFormat.parse(colVals[j]).getTime());
-						}else if(colNames[j].equals("workFrom")) {
-							propertiesMap.put(colNames[j], Integer.parseInt(colVals[j]));
-						}else if(colNames[j].equals("classYear")) {
-							propertiesMap.put(colNames[j], Integer.parseInt(colVals[j]));
-						}else {
-							propertiesMap.put(colNames[j], colVals[j]);
-						}
+					@Override
+					public void run() {
+
+						SimpleDateFormat creationDateDateFormat = 
+								new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+						creationDateDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+						SimpleDateFormat joinDateDateFormat = 
+								new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+						joinDateDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+						boolean txSucceeded = false;
+						int txFailCount = 0;
+						do {
+							for (int i = 0; i < lines.length; i++) {
+								String line = lines[i];
+
+								String[] colVals = line.split("\\|");
+
+								GraphTraversalSource g = graph.traversal();
+								Vertex vertex1 = 
+										g.V().has(idLabelV1, Long.parseLong(colVals[0])).next();
+								Vertex vertex2 = 
+										g.V().has(idLabelV2, Long.parseLong(colVals[1])).next();
+
+								HashMap<Object, Object> propertiesMap = new HashMap<>();
+								for (int j = 2; j < colVals.length; ++j) {
+									if (colNames[j].equals("creationDate")) {
+										try {
+											propertiesMap.put(colNames[j], 
+													creationDateDateFormat.parse(colVals[j]).getTime());
+										} catch (ParseException e) {
+											e.printStackTrace();
+										}
+									} else if (colNames[j].equals("joinDate")) {
+										try {
+											propertiesMap.put(colNames[j], 
+													joinDateDateFormat.parse(colVals[j]).getTime());
+										} catch (ParseException e) {
+											e.printStackTrace();
+										}
+									}else if(colNames[j].equals("workFrom")) {
+										propertiesMap.put(colNames[j], Integer.parseInt(colVals[j]));
+									}else if(colNames[j].equals("classYear")) {
+										propertiesMap.put(colNames[j], Integer.parseInt(colVals[j]));
+									}else {
+										propertiesMap.put(colNames[j], colVals[j]);
+									}
+								}
+
+								List<Object> keyValues = new ArrayList<Object>();
+								propertiesMap.forEach((key, val) -> {
+									keyValues.add(key);
+									keyValues.add(val);
+								});
+
+								vertex1.addEdge(edgeLabel, vertex2, keyValues.toArray());
+
+								if (undirected) {
+									vertex2.addEdge(edgeLabel, vertex1, keyValues.toArray());
+								}
+
+							}
+
+							try {
+								graph.tx().commit();
+								txSucceeded = true;
+							} catch (Exception e) {
+								txFailCount++;
+							}
+
+							if (txFailCount > TX_MAX_RETRIES) {
+								throw new RuntimeException(String.format(
+										"ERROR: Transaction failed %d times (file lines [%d,%d]), " + 
+												"aborting...", txFailCount, threadStartIndex, threadLines.size()-1));
+							}
+						} while (!txSucceeded);
+
+
 					}
+				});
 
-					List<Object> keyValues = new ArrayList<Object>();
-					propertiesMap.forEach((key, val) -> {
-						keyValues.add(key);
-						keyValues.add(val);
-					});
+				thread.setName("t" + t);
+				threads.add(thread);
+				thread.start();				
+			}
+			for(Thread thread : threads)
+			{
+				thread.join();
+			}
 
-					vertex1.addEdge(edgeLabel, vertex2, keyValues.toArray());
-
-					if (undirected) {
-						vertex2.addEdge(edgeLabel, vertex1, keyValues.toArray());
-					}
-
-					lineCount++;
-				}
-
-				try {
-					graph.tx().commit();
-					txSucceeded = true;
-				} catch (Exception e) {
-					txFailCount++;
-				}
-
-				if (txFailCount > TX_MAX_RETRIES) {
-					throw new RuntimeException(String.format(
-							"ERROR: Transaction failed %d times (file lines [%d,%d]), " + 
-									"aborting...", txFailCount, startIndex, endIndex-1));
-				}
-			} while (!txSucceeded);
+			lineCount += batchSize;
 
 			if (printLoadingDots && 
 					(System.currentTimeMillis() > nextProgReportTime)) {
@@ -317,11 +407,11 @@ public class JanusGraphImporter {
 			}
 		}
 	}
-	
+
 	public static void main(String[] args) throws IOException {
 
-		final long startNanoTime = System.currentTimeMillis();
-		
+		final long startMills = System.currentTimeMillis();
+
 		// Get the required parameters from configuration file
 		GetProperties propertiesGetter = new GetProperties();
 		List<String> propValues = propertiesGetter.getPropValues();
@@ -329,6 +419,7 @@ public class JanusGraphImporter {
 		String inputBaseDir = propValues.get(1);
 		int batchSize = Integer.parseInt(propValues.get(2));
 		long progReportPeriod = Long.parseLong(propValues.get(3));
+		int threadCount = Integer.parseInt(propValues.get(4));
 
 		// Create the JanusGraph graph client instance using configuration file
 		JanusGraph graph = JanusGraphFactory.open(hbaseConfFile);
@@ -337,7 +428,7 @@ public class JanusGraphImporter {
 		graph.close();
 		org.janusgraph.core.util.JanusGraphCleanup.clear(graph);
 		graph = JanusGraphFactory.open(hbaseConfFile);
-		
+
 		String vertexLabels[] = {  
 				"person",
 				"comment",
@@ -388,27 +479,27 @@ public class JanusGraphImporter {
 				"url", // organisation place tag tagclass
 				//"workFrom", // workAt
 		};
-		
+
 		// All property keys with Cardinality.SINGLE of type Long
 		String singleCardPropKeysLong[] = {
 				"birthday", // person
 				"creationDate", // comment forum person post knows likes
 				"joinDate", // hasMember
 		};
-		
+
 		// All property keys with Cardinality.SINGLE of type Integer
 		String singleCardPropKeysInteger[] = {
 				"classYear", // studyAt
 				"workFrom", // workAt
 				"length", // comment post
 		};
-		
+
 		// All property keys with Cardinality.LIST
 		String listCardPropKeys[] = {
 				"email", // person
 				"language" // person, post
 		};
-		
+
 		// All property keys representing the SNB ids of the Vertex
 		String idLabels[] = {  
 				"personId",
@@ -452,7 +543,7 @@ public class JanusGraphImporter {
 				.cardinality(Cardinality.SINGLE).make();     
 				mgmt.commit();
 			}
-			
+
 			// Delcare all properties with Cardinality.SINGLE of type Long
 			for ( String propKey : singleCardPropKeysLong ) {
 				System.out.println(propKey);
@@ -461,7 +552,7 @@ public class JanusGraphImporter {
 				.cardinality(Cardinality.SINGLE).make();     
 				mgmt.commit();
 			}
-			
+
 			// Delcare all properties with Cardinality.SINGLE of type Integer
 			for ( String propKey : singleCardPropKeysInteger ) {
 				System.out.println(propKey);
@@ -479,7 +570,7 @@ public class JanusGraphImporter {
 				.cardinality(Cardinality.LIST).make();     
 				mgmt.commit();
 			}
-			
+
 			/* 
 			 * Create a special ID property where we will store the IDs of
 			 * vertices in the SNB dataset, and a corresponding index, for each vertex. 
@@ -497,7 +588,7 @@ public class JanusGraphImporter {
 				mgmt.buildIndex(indexLabel, Vertex.class).addKey(id).buildCompositeIndex();;
 				mgmt.commit();
 			}
-			
+
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, e.toString());
 			return;
@@ -549,14 +640,14 @@ public class JanusGraphImporter {
 				"tagclass_isSubclassOf_tagclass_0_0.csv"
 		};
 
-		final long startLoadingGraphNanoTime = System.currentTimeMillis();
-		
+		final long startLoadingGraphMills = System.currentTimeMillis();
+
 		try {
 			for (String fileName : nodeFiles) {
 				System.out.print("Loading node file " + fileName + " ");
 				try {
 					loadVertices(graph, Paths.get(inputBaseDir + "/" + fileName), 
-							true, batchSize, progReportPeriod);
+							true, batchSize, progReportPeriod, threadCount);
 					System.out.println("Finished");
 				} catch (NoSuchFileException e) {
 					System.out.println(" File not found.");
@@ -567,7 +658,7 @@ public class JanusGraphImporter {
 				System.out.print("Loading properties file " + fileName + " ");
 				try {
 					loadProperties(graph, Paths.get(inputBaseDir + "/" + fileName), 
-							true, batchSize, progReportPeriod);
+							true, batchSize, progReportPeriod, threadCount);
 					System.out.println("Finished");
 				} catch (NoSuchFileException e) {
 					System.out.println(" File not found.");
@@ -579,10 +670,10 @@ public class JanusGraphImporter {
 				try {
 					if (fileName.contains("person_knows_person")) {
 						loadEdges(graph, Paths.get(inputBaseDir + "/" + fileName), true, 
-								true, batchSize, progReportPeriod);
+								true, batchSize, progReportPeriod, threadCount);
 					} else {
 						loadEdges(graph, Paths.get(inputBaseDir + "/" + fileName), false, 
-								true, batchSize, progReportPeriod);
+								true, batchSize, progReportPeriod, threadCount);
 					}
 
 					System.out.println("Finished");
@@ -596,30 +687,28 @@ public class JanusGraphImporter {
 		} finally {
 			graph.close();
 		}
+
+		final long endMills = System.currentTimeMillis();
+
+		long secondsElapsed = 0;
 		
-		final long endNanoTime = System.currentTimeMillis();
-		
-		long timeElapsed = 0;
-		
-		System.out.println("Time needed for loading schema into the graph in milliseconds: " + (startLoadingGraphNanoTime - startNanoTime));
-		System.out.println("Time needed for loading data into the graph in milliseconds: " + (endNanoTime - startLoadingGraphNanoTime));
-		System.out.println("Total duration in milliseconds: " + (endNanoTime - startNanoTime) + "\n");
-		
-		timeElapsed = startLoadingGraphNanoTime - startNanoTime;
+		System.out.println("Time needed for loading schema into the graph in milliseconds: " + (startLoadingGraphMills - startMills));
+		System.out.println("Time needed for loading data into the graph in milliseconds: " + (endMills - startLoadingGraphMills));
+		System.out.println("Total duration in milliseconds: " + (endMills - startMills) + "\n");
+
+		secondsElapsed = (startLoadingGraphMills - startMills) / 1000;
 		System.out.println(String.format(
 				"Time Elapsed for loading schema into the graph: %03dh.%02dm.%01ds",
-				(timeElapsed/1000)/120, (timeElapsed/1000)/60, (timeElapsed/1000) % 60));
-		
-		timeElapsed = endNanoTime - startLoadingGraphNanoTime;
+				((secondsElapsed / (60 * 60)) % 24), ((secondsElapsed / 60) % 60), (secondsElapsed % 60)));
+
+		secondsElapsed = endMills - startLoadingGraphMills;
 		System.out.println(String.format(
 				"Time Elapsed for loading data into the graph: %03dh.%02dm.%01ds",
-				(timeElapsed/1000)/120, (timeElapsed/1000)/60, (timeElapsed/1000) % 60));
-		
-		timeElapsed = endNanoTime - startNanoTime;
+				((secondsElapsed / (60 * 60)) % 24), ((secondsElapsed / 60) % 60), (secondsElapsed % 60)));
+
+		secondsElapsed = endMills - startMills;
 		System.out.println(String.format(
 				"Total duration: %03dh.%02dm.%01ds",
-				(timeElapsed/1000)/120, (timeElapsed/1000)/60, (timeElapsed/1000) % 60));
-		
-
+				((secondsElapsed / (60 * 60)) % 24), ((secondsElapsed / 60) % 60), (secondsElapsed % 60)));
 	}
 }

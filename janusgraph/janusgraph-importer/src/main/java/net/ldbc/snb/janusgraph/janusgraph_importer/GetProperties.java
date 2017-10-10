@@ -32,12 +32,14 @@ public class GetProperties {
 			String snbDataDir = prop.getProperty("snbDataDir");
 			String batchSize = prop.getProperty("batchSize");
 			String progReportPeriod = prop.getProperty("progReportPeriod");
+			String threadCount = prop.getProperty("threadCount");
 			
 			System.out.println(
 					"hbaseConfFile=" + hbaseConfFile + "\n" +
 					"snbDataDir=" + snbDataDir + "\n" +
 					"batchSize=" + batchSize + "\n" +
-					"progReportPeriod=" + progReportPeriod + "\n"
+					"progReportPeriod=" + progReportPeriod + "\n" +
+					"threadCount=" + threadCount + "\n"
 					);
 
 			// add the property value to the result
@@ -45,6 +47,7 @@ public class GetProperties {
 			result.add(snbDataDir);	
 			result.add(batchSize);
 			result.add(progReportPeriod);
+			result.add(threadCount);
 		}catch(Exception e) 
 		{
 			e.printStackTrace();
