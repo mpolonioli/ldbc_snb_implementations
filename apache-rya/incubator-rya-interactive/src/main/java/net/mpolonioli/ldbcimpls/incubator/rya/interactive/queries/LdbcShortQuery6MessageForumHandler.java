@@ -79,6 +79,8 @@ public class LdbcShortQuery6MessageForumHandler implements OperationHandler<Ldbc
 		} catch (RepositoryException | MalformedQueryException e) {
 			e.printStackTrace();
 		}
+		
+		tupleQuery.setMaxQueryTime(2100);
 
 		TupleQueryResult tupleQueryResult = null;
 		try {

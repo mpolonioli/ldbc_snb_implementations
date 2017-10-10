@@ -81,7 +81,9 @@ public class LdbcQuery9Handler implements OperationHandler<LdbcQuery9, DbConnect
 		} catch (RepositoryException | MalformedQueryException e) {
 			e.printStackTrace();
 		}
-
+		
+		tupleQuery.setMaxQueryTime(2100);
+		
 		TupleQueryResult tupleQueryResult = null;
 		try {
 			tupleQueryResult = tupleQuery.evaluate();

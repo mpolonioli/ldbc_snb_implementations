@@ -69,6 +69,8 @@ implements OperationHandler<LdbcShortQuery3PersonFriends, DbConnectionState> {
 		} catch (RepositoryException | MalformedQueryException e) {
 			e.printStackTrace();
 		}
+		
+		tupleQuery.setMaxQueryTime(2100);
 
 		TupleQueryResult tupleQueryResult = null;
 		try {

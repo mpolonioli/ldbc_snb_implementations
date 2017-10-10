@@ -67,6 +67,8 @@ public class LdbcShortQuery1PersonProfileHandler implements OperationHandler<Ldb
 		} catch (RepositoryException | MalformedQueryException e) {
 			e.printStackTrace();
 		}
+		
+		tupleQuery.setMaxQueryTime(2100);
 
 		TupleQueryResult tupleQueryResult = null;
 		try {

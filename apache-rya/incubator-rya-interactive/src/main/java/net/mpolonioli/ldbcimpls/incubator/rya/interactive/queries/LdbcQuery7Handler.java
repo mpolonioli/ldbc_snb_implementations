@@ -82,6 +82,8 @@ public class LdbcQuery7Handler implements OperationHandler<LdbcQuery7, DbConnect
 			e.printStackTrace();
 		}
 
+		tupleQuery.setMaxQueryTime(2100);
+		
 		TupleQueryResult tupleQueryResult = null;
 		try {
 			tupleQueryResult = tupleQuery.evaluate();

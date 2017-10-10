@@ -96,9 +96,11 @@ public class LdbcQuery1Handler implements OperationHandler<LdbcQuery1, DbConnect
 			e.printStackTrace();
 		}
 		
+		tupleQuery.setMaxQueryTime(1800);
+		
 		TupleQueryResult tupleQueryResult = null;
 		try {
-			tupleQueryResult = tupleQuery.evaluate();
+			tupleQueryResult = tupleQuery.evaluate();;
 		} catch (QueryEvaluationException e) {
 			e.printStackTrace();
 		}

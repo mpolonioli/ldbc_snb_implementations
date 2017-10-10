@@ -80,6 +80,8 @@ public class LdbcQuery2Handler implements OperationHandler<LdbcQuery2, DbConnect
 			e.printStackTrace();
 		}
 
+		tupleQuery.setMaxQueryTime(1800);
+		
 		TupleQueryResult tupleQueryResult = null;
 		try {
 			tupleQueryResult = tupleQuery.evaluate();

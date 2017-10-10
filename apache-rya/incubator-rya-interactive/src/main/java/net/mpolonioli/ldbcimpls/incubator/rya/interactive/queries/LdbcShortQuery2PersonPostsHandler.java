@@ -95,6 +95,8 @@ public class LdbcShortQuery2PersonPostsHandler implements OperationHandler<LdbcS
 		} catch (RepositoryException | MalformedQueryException e) {
 			e.printStackTrace();
 		}
+		
+		tupleQuery.setMaxQueryTime(2100);
 
 		TupleQueryResult tupleQueryResult = null;
 		try {

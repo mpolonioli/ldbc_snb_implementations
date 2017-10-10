@@ -57,6 +57,8 @@ public class LdbcShortQuery5MessageCreatorHandler implements OperationHandler<Ld
 		} catch (RepositoryException | MalformedQueryException e) {
 			e.printStackTrace();
 		}
+		
+		tupleQuery.setMaxQueryTime(2100);
 
 		TupleQueryResult tupleQueryResult = null;
 		try {

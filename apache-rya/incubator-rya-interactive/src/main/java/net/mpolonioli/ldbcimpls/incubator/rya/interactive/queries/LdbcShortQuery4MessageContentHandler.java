@@ -62,6 +62,8 @@ public class LdbcShortQuery4MessageContentHandler implements OperationHandler<Ld
 			e.printStackTrace();
 		}
 
+		tupleQuery.setMaxQueryTime(2100);
+		
 		TupleQueryResult tupleQueryResult = null;
 		try {
 			tupleQueryResult = tupleQuery.evaluate();
