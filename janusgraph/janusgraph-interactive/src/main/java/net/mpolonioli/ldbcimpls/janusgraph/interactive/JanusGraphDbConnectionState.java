@@ -13,7 +13,7 @@ import java.util.logging.Level;
 
 public class JanusGraphDbConnectionState extends DbConnectionState{
 
-	private JanusGraph client;
+	private final JanusGraph client;
 
 	  public JanusGraphDbConnectionState() {
 		  
@@ -32,7 +32,7 @@ public class JanusGraphDbConnectionState extends DbConnectionState{
 	    */
 		  
 	    // create the connection via configuration file  
-	    graph = JanusGraphFactory.open("//opt//janusgraph//janusgraph-0.1.1-hadoop2//conf//janusgraph-hbase.properties");
+	    client = JanusGraphFactory.open("//opt//janusgraph//janusgraph-0.1.1-hadoop2//conf//janusgraph-hbase.properties");
 	  }
 
 	  public JanusGraph getClient() {
