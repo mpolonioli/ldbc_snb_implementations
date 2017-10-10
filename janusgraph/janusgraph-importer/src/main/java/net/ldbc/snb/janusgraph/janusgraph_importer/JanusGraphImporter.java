@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
 
 public class JanusGraphImporter {
 	private static final Logger logger =
