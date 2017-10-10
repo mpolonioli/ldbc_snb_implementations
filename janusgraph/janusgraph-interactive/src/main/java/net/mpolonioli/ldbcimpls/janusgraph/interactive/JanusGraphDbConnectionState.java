@@ -16,6 +16,9 @@ public class JanusGraphDbConnectionState extends DbConnectionState{
 	private JanusGraph client;
 
 	  public JanusGraphDbConnectionState() {
+		  
+	    //create the connection specifing all the configurations
+	    /*
 	    BaseConfiguration config = new BaseConfiguration();
 	    config.setDelimiterParsingDisabled(true);
 	    config.setProperty("storage.backend", "hbase");
@@ -26,6 +29,10 @@ public class JanusGraphDbConnectionState extends DbConnectionState{
 	    config.setProperty("cache.db-cache-size", "0.5");
 	    config.setProperty("gremlin.graph", "org.janusgraph.core.JanusGraphFactory");
 	    client = JanusGraphFactory.open(config);
+	    */
+		  
+	    // create the connection via configuration file  
+	    graph = JanusGraphFactory.open("/opt/janusgraph/janusgraph-0.1.1-hadoop2/conf/janusgraph-hbase.properties");
 	  }
 
 	  public JanusGraph getClient() {
