@@ -692,6 +692,7 @@ public class JanusGraphImporter {
 
 		long secondsElapsed = 0;
 		
+		System.out.println();
 		System.out.println("Time needed for loading schema into the graph in milliseconds: " + (startLoadingGraphMills - startMills));
 		System.out.println("Time needed for loading data into the graph in milliseconds: " + (endMills - startLoadingGraphMills));
 		System.out.println("Total duration in milliseconds: " + (endMills - startMills) + "\n");
