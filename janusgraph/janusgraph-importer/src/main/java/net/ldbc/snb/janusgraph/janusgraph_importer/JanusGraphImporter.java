@@ -644,7 +644,7 @@ public class JanusGraphImporter {
 
 		try {
 			for (String fileName : nodeFiles) {
-				System.out.print("Loading node file " + fileName + " ");
+				System.out.println("Loading node file " + fileName);
 				try {
 					loadVertices(graph, Paths.get(inputBaseDir + "/" + fileName), 
 							true, batchSize, progReportPeriod, threadCount);
@@ -655,7 +655,7 @@ public class JanusGraphImporter {
 			}
 
 			for (String fileName : propertiesFiles) {
-				System.out.print("Loading properties file " + fileName + " ");
+				System.out.println("Loading properties file " + fileName);
 				try {
 					loadProperties(graph, Paths.get(inputBaseDir + "/" + fileName), 
 							true, batchSize, progReportPeriod, threadCount);
@@ -666,7 +666,7 @@ public class JanusGraphImporter {
 			}
 
 			for (String fileName : edgeFiles) {
-				System.out.print("Loading edge file " + fileName + " ");
+				System.out.println("Loading edge file " + fileName);
 				try {
 					if (fileName.contains("person_knows_person")) {
 						loadEdges(graph, Paths.get(inputBaseDir + "/" + fileName), true, 
