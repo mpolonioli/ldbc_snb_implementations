@@ -42,6 +42,11 @@
     	<artifactId>guava</artifactId>
     	<version>16.0.1</version>
     </dependency>
+    <dependency>
+    	<groupId>org.janusgraph</groupId>
+    	<artifactId>janusgraph-hbase</artifactId>
+    	<version>0.1.1</version>
+    </dependency>
   </dependencies>
 
 <build>
