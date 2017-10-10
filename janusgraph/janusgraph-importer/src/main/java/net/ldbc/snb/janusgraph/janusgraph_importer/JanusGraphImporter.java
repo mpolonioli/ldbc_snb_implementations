@@ -38,7 +38,6 @@ public class JanusGraphImporter {
 					throws IOException, java.text.ParseException {
 
 		String[] colNames = null;
-		boolean firstLine = true;
 		Map<Object, Object> propertiesMap;
 		SimpleDateFormat birthdayDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		birthdayDateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -136,9 +135,7 @@ public class JanusGraphImporter {
 	public static void loadProperties(Graph graph, Path filePath, 
 			boolean printLoadingDots, int batchSize, long progReportPeriod) 
 					throws IOException {
-		long count = 0;
 		String[] colNames = null;
-		boolean firstLine = true;
 		String fileNameParts[] = filePath.getFileName().toString().split("_");
 		String entityName = fileNameParts[0];
 
@@ -211,9 +208,7 @@ public class JanusGraphImporter {
 	public static void loadEdges(Graph graph, Path filePath, boolean undirected,
 			boolean printLoadingDots, int batchSize, long progReportPeriod) 
 					throws IOException,  java.text.ParseException {
-		long count = 0;
 		String[] colNames = null;
-		boolean firstLine = true;
 		Map<Object, Object> propertiesMap;
 		SimpleDateFormat creationDateDateFormat = 
 				new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
