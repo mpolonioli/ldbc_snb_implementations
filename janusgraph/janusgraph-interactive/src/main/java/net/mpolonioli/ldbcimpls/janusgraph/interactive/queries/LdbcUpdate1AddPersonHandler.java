@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
-import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.SchemaViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ OperationHandler<LdbcUpdate1AddPerson, DbConnectionState> {
 	public void executeOperation(LdbcUpdate1AddPerson operation,
 			DbConnectionState dbConnectionState,
 			ResultReporter reporter) throws DbException {
-		Graph client = ((JanusGraphDbConnectionState) dbConnectionState).getClient();
+		JanusGraph client = ((JanusGraphDbConnectionState) dbConnectionState).getClient();
 		GraphTraversalSource g = client.traversal();
 		try
 		{

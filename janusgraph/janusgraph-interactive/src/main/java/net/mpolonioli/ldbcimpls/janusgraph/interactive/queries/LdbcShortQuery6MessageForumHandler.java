@@ -2,8 +2,8 @@ package net.mpolonioli.ldbcimpls.janusgraph.interactive.queries;
 
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
-import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.janusgraph.core.JanusGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,7 @@ OperationHandler<LdbcShortQuery6MessageForum, DbConnectionState> {
 			DbConnectionState dbConnectionState,
 			ResultReporter resultReporter) throws DbException {
 
-		Graph graph = ((JanusGraphDbConnectionState) dbConnectionState).getClient();
+		JanusGraph graph = ((JanusGraphDbConnectionState) dbConnectionState).getClient();
 		GraphTraversalSource g = graph.traversal();
 		
 		long messageId = operation.messageId();

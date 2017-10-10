@@ -8,7 +8,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
-import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.janusgraph.core.JanusGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +40,7 @@ public class LdbcQuery6Handler
 			DbConnectionState dbConnectionState,
 			ResultReporter resultReporter) throws DbException {
 
-		Graph graph = ((JanusGraphDbConnectionState) dbConnectionState).getClient();
+		JanusGraph graph = ((JanusGraphDbConnectionState) dbConnectionState).getClient();
 		GraphTraversalSource g = graph.traversal();
 
 		String tag = operation.tagName();

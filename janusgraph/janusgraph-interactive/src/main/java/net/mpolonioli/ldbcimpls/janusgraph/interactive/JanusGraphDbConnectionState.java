@@ -4,16 +4,16 @@ import java.io.IOException;
 
 import com.ldbc.driver.DbConnectionState;
 
+import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphFactory;
 
 import org.apache.commons.configuration.BaseConfiguration;
-import org.apache.tinkerpop.gremlin.structure.Graph;
 
 import java.util.logging.Level;
 
 public class JanusGraphDbConnectionState extends DbConnectionState{
 
-	private Graph client;
+	private JanusGraph client;
 
 	  public JanusGraphDbConnectionState() {
 	    BaseConfiguration config = new BaseConfiguration();
@@ -24,7 +24,7 @@ public class JanusGraphDbConnectionState extends DbConnectionState{
 	    client = JanusGraphFactory.open(config);
 	  }
 
-	  public Graph getClient() {
+	  public JanusGraph getClient() {
 	    return client;
 	  }
 

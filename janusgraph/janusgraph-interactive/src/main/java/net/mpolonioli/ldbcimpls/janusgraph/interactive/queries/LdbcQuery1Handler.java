@@ -17,8 +17,8 @@ import org.apache.tinkerpop.gremlin.process.traversal.Order;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Edge;
-import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.janusgraph.core.JanusGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,7 @@ implements OperationHandler<LdbcQuery1, DbConnectionState> {
 			ResultReporter resultReporter) throws DbException {
 
 		
-		Graph graph = ((JanusGraphDbConnectionState) dbConnectionState).getClient();
+		JanusGraph graph = ((JanusGraphDbConnectionState) dbConnectionState).getClient();
 		GraphTraversalSource g = graph.traversal();
 		
 		long personId = operation.personId();
