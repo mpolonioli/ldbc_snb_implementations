@@ -5,6 +5,7 @@ import org.janusgraph.core.Multiplicity;
 import org.janusgraph.core.PropertyKey;
 import org.janusgraph.core.schema.JanusGraphManagement;
 import org.janusgraph.core.JanusGraphFactory;
+import org.janusgraph.core.JanusGraphTransaction;
 import org.janusgraph.core.JanusGraph;
 
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -33,7 +34,7 @@ public class JanusGraphImporter {
 
 	private static final long TX_MAX_RETRIES = 1000;
 
-	public static void loadVertices(Graph graph, Path filePath, 
+	public static void loadVertices(JanusGraph graph, Path filePath, 
 			boolean printLoadingDots, int batchSize, long progReportPeriod, int threadCount) 
 					throws IOException, java.text.ParseException, InterruptedException {
 
@@ -79,6 +80,7 @@ public class JanusGraphImporter {
 						boolean txSucceeded = false;
 						int txFailCount = 0;
 						do {
+							JanusGraphTransaction tx = graph.newTransaction();
 							for (int i = 0; i < lines.length; i++) {
 
 								String line = lines[i];
@@ -118,12 +120,12 @@ public class JanusGraphImporter {
 									keyValues.add(val);
 								});
 
-								graph.addVertex(keyValues.toArray());
+								tx.addVertex(keyValues.toArray());
 
 							}
 
 							try {
-								graph.tx().commit();
+								tx.commit();
 								txSucceeded = true;
 							} catch (Exception e) {
 								txFailCount++;
@@ -163,7 +165,7 @@ public class JanusGraphImporter {
 		}
 	}
 
-	public static void loadProperties(Graph graph, Path filePath, 
+	public static void loadProperties(JanusGraph graph, Path filePath, 
 			boolean printLoadingDots, int batchSize, long progReportPeriod, int threadCount) 
 					throws IOException, InterruptedException {
 		String fileNameParts[] = filePath.getFileName().toString().split("_");
@@ -208,12 +210,13 @@ public class JanusGraphImporter {
 						boolean txSucceeded = false;
 						int txFailCount = 0;
 						do {
+							JanusGraphTransaction tx = graph.newTransaction();
 							for (int i = 0; i < lines.length; i++) {
 								String line = lines[i];
 
 								String[] colVals = line.split("\\|");
 
-								GraphTraversalSource g = graph.traversal();
+								GraphTraversalSource g = tx.traversal();
 								Vertex vertex = 
 										g.V().has(idLabel, Long.parseLong(colVals[0])).next();
 
@@ -225,7 +228,7 @@ public class JanusGraphImporter {
 							}
 
 							try {
-								graph.tx().commit();
+								tx.commit();
 								txSucceeded = true;
 							} catch (Exception e) {
 								txFailCount++;
@@ -264,7 +267,7 @@ public class JanusGraphImporter {
 		}
 	}
 
-	public static void loadEdges(Graph graph, Path filePath, boolean undirected,
+	public static void loadEdges(JanusGraph graph, Path filePath, boolean undirected,
 			boolean printLoadingDots, int batchSize, long progReportPeriod, int threadCount) 
 					throws IOException,  java.text.ParseException, InterruptedException {
 
@@ -315,12 +318,13 @@ public class JanusGraphImporter {
 						boolean txSucceeded = false;
 						int txFailCount = 0;
 						do {
+							JanusGraphTransaction tx = graph.newTransaction();
 							for (int i = 0; i < lines.length; i++) {
 								String line = lines[i];
 
 								String[] colVals = line.split("\\|");
 
-								GraphTraversalSource g = graph.traversal();
+								GraphTraversalSource g = tx.traversal();
 								Vertex vertex1 = 
 										g.V().has(idLabelV1, Long.parseLong(colVals[0])).next();
 								Vertex vertex2 = 
@@ -366,7 +370,7 @@ public class JanusGraphImporter {
 							}
 
 							try {
-								graph.tx().commit();
+								tx.commit();
 								txSucceeded = true;
 							} catch (Exception e) {
 								txFailCount++;
@@ -378,8 +382,6 @@ public class JanusGraphImporter {
 												"aborting...", txFailCount, threadStartIndex, threadLines.size()-1));
 							}
 						} while (!txSucceeded);
-
-
 					}
 				});
 
