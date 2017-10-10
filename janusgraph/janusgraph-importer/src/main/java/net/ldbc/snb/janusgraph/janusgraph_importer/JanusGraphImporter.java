@@ -700,16 +700,16 @@ public class JanusGraphImporter {
 		secondsElapsed = (startLoadingGraphMills - startMills) / 1000;
 		System.out.println(String.format(
 				"Time Elapsed for loading schema into the graph: %03dh.%02dm.%01ds",
-				((secondsElapsed / (60 * 60)) % 24), ((secondsElapsed / 60) % 60), (secondsElapsed % 60)));
+				((secondsElapsed / (60 * 60)) % 60), ((secondsElapsed / 60) % 60), (secondsElapsed % 60)));
 
 		secondsElapsed = endMills - startLoadingGraphMills;
 		System.out.println(String.format(
 				"Time Elapsed for loading data into the graph: %03dh.%02dm.%01ds",
-				((secondsElapsed / (60 * 60)) % 24), ((secondsElapsed / 60) % 60), (secondsElapsed % 60)));
+				((secondsElapsed / (60 * 60)) % 60), ((secondsElapsed / 60) % 60), (secondsElapsed % 60)));
 
 		secondsElapsed = endMills - startMills;
 		System.out.println(String.format(
 				"Total duration: %03dh.%02dm.%01ds",
-				((secondsElapsed / (60 * 60)) % 24), ((secondsElapsed / 60) % 60), (secondsElapsed % 60)));
+				((secondsElapsed / (60 * 60)) % 60), ((secondsElapsed / 60) % 60), (secondsElapsed % 60)));
 	}
 }
