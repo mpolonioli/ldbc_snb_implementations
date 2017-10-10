@@ -32,7 +32,7 @@ public class JanusGraphDbConnectionState extends DbConnectionState{
 	    */
 		  
 	    // create the connection via configuration file  
-	    graph = JanusGraphFactory.open("/opt/janusgraph/janusgraph-0.1.1-hadoop2/conf/janusgraph-hbase.properties");
+	    graph = JanusGraphFactory.open("//opt//janusgraph//janusgraph-0.1.1-hadoop2//conf//janusgraph-hbase.properties");
 	  }
 
 	  public JanusGraph getClient() {
