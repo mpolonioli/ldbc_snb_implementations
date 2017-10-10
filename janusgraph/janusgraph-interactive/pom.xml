@@ -32,6 +32,11 @@
     	<artifactId>janusgraph-hbase</artifactId>
     	<version>0.1.1</version>
     </dependency>
+    <dependency>
+    	<groupId>org.janusgraph</groupId>
+    	<artifactId>janusgraph-all</artifactId>
+    	<version>0.1.1</version>
+    </dependency>
   </dependencies>
 
 <build>
