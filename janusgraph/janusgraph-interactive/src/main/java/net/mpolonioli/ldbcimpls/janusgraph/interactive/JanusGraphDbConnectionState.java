@@ -19,8 +19,12 @@ public class JanusGraphDbConnectionState extends DbConnectionState{
 	    BaseConfiguration config = new BaseConfiguration();
 	    config.setDelimiterParsingDisabled(true);
 	    config.setProperty("storage.backend", "hbase");
-	    config.setProperty("storage.hostname", "siti-rack.siti.disco.unimib.it");
+	    config.setProperty("storage.hostname", "127.0.0.1");
 	    config.setProperty("storage.hbase.keyspace", "ldbc_snb_socialnet");
+	    config.setProperty("storage.hbase.table", "janusgraph");  
+	    config.setProperty("cache.db-cache", "true");
+	    config.setProperty("cache.db-cache-size", "0.5");
+	    config.setProperty("gremlin.graph", "org.janusgraph.core.JanusGraphFactory");
 	    client = JanusGraphFactory.open(config);
 	  }
 
