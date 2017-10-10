@@ -16,29 +16,14 @@
 
   <dependencies>
 
-    <dependency>
-    	<groupId>commons-configuration</groupId>
-    	<artifactId>commons-configuration</artifactId>
-    	<version>1.6</version>
-    </dependency>
 
-    <dependency>
-    	<groupId>org.apache.tinkerpop</groupId>
-    	<artifactId>gremlin-core</artifactId>
-    	<version>3.3.0</version>
-    </dependency>
 
     <dependency>
     	<groupId>org.janusgraph</groupId>
-    	<artifactId>janusgraph-all</artifactId>
+    	<artifactId>janusgraph-hbase</artifactId>
     	<version>0.1.1</version>
     </dependency>
 
-    <dependency>
-    	<groupId>com.google.guava</groupId>
-    	<artifactId>guava</artifactId>
-    	<version>16.0.1</version>
-    </dependency>
 
   </dependencies>
 
