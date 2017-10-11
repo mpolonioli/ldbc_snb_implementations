@@ -21,11 +21,6 @@
     	<version>0.1.1</version>
     </dependency>
     <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>16.0</version>
-    </dependency>
-    <dependency>
     	<groupId>com.ldbc.driver</groupId>
     	<artifactId>jeeves</artifactId>
     	<version>0.3-SNAPSHOT</version>
@@ -34,6 +29,12 @@
     	<groupId>org.janusgraph</groupId>
     	<artifactId>janusgraph-all</artifactId>
     	<version>0.1.1</version>
+    	<exclusions>
+    		<exclusion>
+    			<groupId>com.google.guava</groupId>
+    			<artifactId>guava</artifactId>
+    		</exclusion>
+    	</exclusions>
     </dependency>
   </dependencies>
 
@@ -59,4 +60,13 @@
     </plugin>
   </plugins>
 </build>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.google.guava</groupId>
+				<artifactId>guava</artifactId>
+				<version>11.0.2</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 </project>
