@@ -31,59 +31,58 @@ import net.mpolonioli.ldbcimpls.janusgraph.interactive.JanusGraphDbConnectionSta
 public class LdbcQuery2Handler
 implements OperationHandler<LdbcQuery2, DbConnectionState> {
 
-final static Logger logger =
-  LoggerFactory.getLogger(LdbcQuery2Handler.class);
+	final static Logger logger =
+			LoggerFactory.getLogger(LdbcQuery2Handler.class);
 
-@Override
-public void executeOperation(final LdbcQuery2 operation,
-  DbConnectionState dbConnectionState,
-  ResultReporter resultReporter) throws DbException {
-	
-	JanusGraph graph = ((JanusGraphDbConnectionState) dbConnectionState).getClient();
-	GraphTraversalSource g = graph.traversal();
-	
-	long maxDate = operation.maxDate().getTime();
-	int limit = operation.limit();
-	long personId = operation.personId();
-	
-	List<LdbcQuery2Result> result = new ArrayList<>();
-	
-	// execute the query
-	List<Vertex> messageList = new ArrayList<>();
-	try {
-		messageList = 
-				g.V().has("personId", personId)
-				.out("knows")
-				.in("hasCreator")
-				.has("creationDate", P.lte(maxDate))
-				.order().by("creationDate", Order.decr).by("messageId", Order.incr)
-				.limit(limit)
-				.toList();
-	}catch(Exception e) {
-		e.printStackTrace();
-	}
-	
-	for(int i = 0; i < messageList.size(); i++)
-	{
-		Vertex message = messageList.get(i);
-		long creationDate = (long) message.value("creationDate");
+	@Override
+	public void executeOperation(final LdbcQuery2 operation,
+			DbConnectionState dbConnectionState,
+			ResultReporter resultReporter) throws DbException {
 
-		Vertex creator = message.vertices(Direction.OUT, "hasCreator").next();
-		long creatorId =  (long) creator.value("personId");
-		String firstName = (String) creator.value("firstName");
-		String lastName = (String) creator.value("lastName");
-		long messageId = (long) message.value("messageId");
-		String content;
+		JanusGraph graph = ((JanusGraphDbConnectionState) dbConnectionState).getClient();
+		GraphTraversalSource g = graph.traversal();
+
+		long maxDate = operation.maxDate().getTime();
+		int limit = operation.limit();
+		long personId = operation.personId();
+
+		List<LdbcQuery2Result> result = new ArrayList<>();
+
+		// execute the query
+		List<Vertex> messageList = new ArrayList<>();
 		try {
-			content = (String) message.value("content");
-		}catch(IllegalStateException e) {
-			content = (String) message.value("imageFile");
+			messageList = 
+					g.V().has("personId", personId)
+					.out("knows")
+					.in("hasCreator")
+					.has("creationDate", P.lte(maxDate))
+					.order().by("creationDate", Order.decr).by("messageId", Order.incr)
+					.limit(limit)
+					.toList();
+
+			for(int i = 0; i < messageList.size(); i++)
+			{
+				Vertex message = messageList.get(i);
+				long creationDate = (long) message.value("creationDate");
+
+				Vertex creator = message.vertices(Direction.OUT, "hasCreator").next();
+				long creatorId =  (long) creator.value("personId");
+				String firstName = (String) creator.value("firstName");
+				String lastName = (String) creator.value("lastName");
+				long messageId = (long) message.value("messageId");
+				String content;
+				try {
+					content = (String) message.value("content");
+				}catch(IllegalStateException e) {
+					content = (String) message.value("imageFile");
+				}
+				result.add(new LdbcQuery2Result(creatorId, firstName, lastName, messageId, content, creationDate));
+
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+			System.out.println("*\n*\n*" + operation + "\n*\n*\n*");
 		}
-		result.add(new LdbcQuery2Result(creatorId, firstName, lastName, messageId, content, creationDate));
-
-    }
-	resultReporter.report(result.size(), result, operation);
-
-}
-
+		resultReporter.report(result.size(), result, operation);
+	}
 }

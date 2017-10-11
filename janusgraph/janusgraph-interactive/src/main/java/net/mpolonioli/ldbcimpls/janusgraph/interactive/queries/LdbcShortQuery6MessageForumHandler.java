@@ -61,6 +61,7 @@ OperationHandler<LdbcShortQuery6MessageForum, DbConnectionState> {
 		{
 			result = new LdbcShortQuery6MessageForumResult(0, "null", 0, "null", "null");
 			e.printStackTrace();
+			System.out.println("*\n*\n*" + operation + "\n*\n*\n*");
 		}
 		
 		resultReporter.report(1, result, operation);

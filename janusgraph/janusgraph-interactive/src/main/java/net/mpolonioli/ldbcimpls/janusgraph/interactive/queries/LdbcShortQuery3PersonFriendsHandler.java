@@ -72,6 +72,7 @@ OperationHandler<LdbcShortQuery3PersonFriends, DbConnectionState> {
 		}catch(Exception e)
     	{
     		e.printStackTrace();
+    		System.out.println("*\n*\n*" + operation + "\n*\n*\n*");
     	}
 		
 		resultReporter.report(result.size(), result, operation);

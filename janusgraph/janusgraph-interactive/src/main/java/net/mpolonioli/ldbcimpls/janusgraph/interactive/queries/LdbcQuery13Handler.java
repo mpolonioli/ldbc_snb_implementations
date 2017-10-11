@@ -67,6 +67,7 @@ public class LdbcQuery13Handler
 		}catch(Exception e)
 		{
 			e.printStackTrace();
+			System.out.println("*\n*\n*" + operation + "\n*\n*\n*");
 		}
 		LdbcQuery13Result result = new LdbcQuery13Result(length);
 		

@@ -47,7 +47,8 @@ OperationHandler<LdbcUpdate2AddPostLike, DbConnectionState> {
 			client.tx().commit();
 		}catch(SchemaViolationException e)
 		{
-
+			e.printStackTrace();
+			System.out.println("*\n*\n*" + operation + "\n*\n*\n*");
 		}
 		reporter.report(0, LdbcNoResult.INSTANCE, operation);
 	}

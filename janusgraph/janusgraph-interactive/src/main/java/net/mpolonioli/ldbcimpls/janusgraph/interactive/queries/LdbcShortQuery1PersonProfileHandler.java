@@ -56,7 +56,8 @@ OperationHandler<LdbcShortQuery1PersonProfile, DbConnectionState> {
 		} catch (Exception e)
 		{
 			result = new LdbcShortQuery1PersonProfileResult("null", "null", 0, "null", "null", 0, "null", 0);
-			e.printStackTrace();	
+			e.printStackTrace();
+			System.out.println("*\n*\n*" + operation + "\n*\n*\n*");
 		}
 
 		resultReporter.report(1, result, operation);

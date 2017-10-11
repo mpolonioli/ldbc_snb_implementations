@@ -49,6 +49,7 @@ OperationHandler<LdbcShortQuery5MessageCreator, DbConnectionState> {
 		{
 			result = new LdbcShortQuery5MessageCreatorResult(0, "null", "null");
 			e.printStackTrace();
+			System.out.println("*\n*\n*" + operation + "\n*\n*\n*");
 		}
 
 		resultReporter.report(1, result, operation);
