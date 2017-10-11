@@ -78,13 +78,6 @@ public class LdbcQuery12Handler
 											__.repeat(__.out("isSubclassOf")).has("name", tagClass)))
 							.select("comment").count())
 					.toList();
-
-			for(int i = 0; i < resultSet.size(); i++)
-			{
-				for (Map.Entry<String, Object> entry : resultSet.get(i).entrySet()) {
-					System.out.println("Key : " + entry.getKey() + " Value : " + entry.getValue());
-				}
-			}
 			
 			for(int i = 0; i < resultSet.size(); i++)
 			{
