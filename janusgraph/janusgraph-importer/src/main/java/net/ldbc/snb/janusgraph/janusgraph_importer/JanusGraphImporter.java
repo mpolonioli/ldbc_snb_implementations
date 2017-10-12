@@ -33,6 +33,16 @@ public class JanusGraphImporter {
 
 	private static final long TX_MAX_RETRIES = 1000;
 
+	private static long startLoadingVerticiesMills;
+
+	private static long startMills;
+
+	private static long startLoadingPropertiesMills;
+
+	private static long startLoadingEdgesMills;
+
+	private static long endMills;
+
 	public static void loadVertices(JanusGraph graph, Path filePath, 
 			boolean printLoadingDots, int batchSize, long progReportPeriod, int threadCount) 
 					throws IOException, java.text.ParseException, InterruptedException {
@@ -410,7 +420,7 @@ public class JanusGraphImporter {
 
 	public static void main(String[] args) throws IOException {
 
-		final long startMills = System.currentTimeMillis();
+		startMills = System.currentTimeMillis();
 
 		// Get the required parameters from configuration file
 		GetProperties propertiesGetter = new GetProperties();
@@ -517,54 +527,61 @@ public class JanusGraphImporter {
 		 * Explicitly define the graph schema.
 		 */
 		try {
+			System.out.println("Explicitly define the graph schema");
 			JanusGraphManagement mgmt;
 
+			System.out.println("Declaring all vertex labels");
 			// Declare all vertex labels.
 			for( String vLabel : vertexLabels ) {
-				System.out.println(vLabel);
+				System.out.print(vLabel + " ");
 				mgmt = graph.openManagement();
 				mgmt.makeVertexLabel(vLabel).make();
 				mgmt.commit();
 			}
 
+			System.out.println("\nDeclaring all edge labels");
 			// Declare all edge labels.
 			for( String eLabel : edgeLabels ) {
-				System.out.println(eLabel);
+				System.out.print(eLabel + " ");
 				mgmt = graph.openManagement();
 				mgmt.makeEdgeLabel(eLabel).multiplicity(Multiplicity.SIMPLE).make();
 				mgmt.commit();
 			}
 
+			System.out.println("\nDeclaring all properties with Cardinality.SINGLE of type String");
 			// Delcare all properties with Cardinality.SINGLE of type String
 			for ( String propKey : singleCardPropKeysString ) {
-				System.out.println(propKey);
+				System.out.print(propKey + " ");
 				mgmt = graph.openManagement();
 				mgmt.makePropertyKey(propKey).dataType(String.class)
 				.cardinality(Cardinality.SINGLE).make();     
 				mgmt.commit();
 			}
 
+			System.out.println("\nDeclaring all properties with Cardinality.SINGLE of type Long");
 			// Delcare all properties with Cardinality.SINGLE of type Long
 			for ( String propKey : singleCardPropKeysLong ) {
-				System.out.println(propKey);
+				System.out.print(propKey + " ");
 				mgmt = graph.openManagement();
 				mgmt.makePropertyKey(propKey).dataType(Long.class)
 				.cardinality(Cardinality.SINGLE).make();     
 				mgmt.commit();
 			}
 
+			System.out.println("\nDeclaring all properties with Cardinality.SINGLE of type Integer");
 			// Delcare all properties with Cardinality.SINGLE of type Integer
 			for ( String propKey : singleCardPropKeysInteger ) {
-				System.out.println(propKey);
+				System.out.print(propKey + " ");
 				mgmt = graph.openManagement();
 				mgmt.makePropertyKey(propKey).dataType(Integer.class)
 				.cardinality(Cardinality.SINGLE).make();     
 				mgmt.commit();
 			}
 
+			System.out.println("\nDeclaring all properties with Cardinality.LIST");
 			// Delcare all properties with Cardinality.LIST
 			for ( String propKey : listCardPropKeys ) {
-				System.out.println(propKey);
+				System.out.print(propKey + " ");
 				mgmt = graph.openManagement();
 				mgmt.makePropertyKey(propKey).dataType(String.class)
 				.cardinality(Cardinality.LIST).make();     
@@ -578,17 +595,18 @@ public class JanusGraphImporter {
 			 * vertices, but the benchmark references vertices by the ID they
 			 * were originally assigned during dataset generation.
 			 */
+			System.out.println("\nDeclaring all id properties and relatives index");
 			for( String idLabel : idLabels ) {
 				mgmt = graph.openManagement();
-				System.out.println(idLabel);
+				System.out.println(idLabel + "|");
 				PropertyKey id = mgmt.makePropertyKey(idLabel).dataType(Long.class)
 						.cardinality(Cardinality.SINGLE).make(); 
 				String indexLabel = "by" + idLabel.substring(0, 1).toUpperCase() + idLabel.substring(1);
-				System.out.println(indexLabel);
+				System.out.println(indexLabel + " ");
 				mgmt.buildIndex(indexLabel, Vertex.class).addKey(id).buildCompositeIndex();;
 				mgmt.commit();
 			}
-
+			System.out.println("Graph schema explicitly defined");
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, e.toString());
 			return;
@@ -640,9 +658,10 @@ public class JanusGraphImporter {
 				"tagclass_isSubclassOf_tagclass_0_0.csv"
 		};
 
-		final long startLoadingGraphMills = System.currentTimeMillis();
-
+		System.out.println("Start loading data");
 		try {
+			startLoadingVerticiesMills = System.currentTimeMillis();
+			System.out.println("Loading verticies");
 			for (String fileName : nodeFiles) {
 				System.out.println("Loading node file " + fileName);
 				try {
@@ -653,7 +672,10 @@ public class JanusGraphImporter {
 					System.out.println(" File not found.");
 				}
 			}
-
+			System.out.println("Finished loading verticies");
+			
+			startLoadingPropertiesMills = System.currentTimeMillis();
+			System.out.println("Loading properties");
 			for (String fileName : propertiesFiles) {
 				System.out.println("Loading properties file " + fileName);
 				try {
@@ -664,7 +686,10 @@ public class JanusGraphImporter {
 					System.out.println(" File not found.");
 				}
 			}
+			System.out.println("Finished loading properties");
 
+			startLoadingEdgesMills = System.currentTimeMillis();
+			System.out.println("Loading edges");
 			for (String fileName : edgeFiles) {
 				System.out.println("Loading edge file " + fileName);
 				try {
@@ -675,41 +700,45 @@ public class JanusGraphImporter {
 						loadEdges(graph, Paths.get(inputBaseDir + "/" + fileName), false, 
 								true, batchSize, progReportPeriod, threadCount);
 					}
-
 					System.out.println("Finished");
 				} catch (NoSuchFileException e) {
 					System.out.println(" File not found.");
 				}
 			}
+			System.out.println("Finished loading edges");
 		} catch (Exception e) {
 			System.out.println("Exception: " + e);
 			e.printStackTrace();
 		} finally {
 			graph.close();
 		}
-
-		final long endMills = System.currentTimeMillis();
-
-		long secondsElapsed = 0;
+		endMills = System.currentTimeMillis();
 		
-		System.out.println();
-		System.out.println("Time needed for loading schema into the graph in milliseconds: " + (startLoadingGraphMills - startMills));
-		System.out.println("Time needed for loading data into the graph in milliseconds: " + (endMills - startLoadingGraphMills));
+		System.out.println("Finished loading data");
+		System.out.println("Time needed for loading schema in milliseconds: " + (startLoadingVerticiesMills - startMills));
+		System.out.println("Time needed for loading verticies in milliseconds: " + (startLoadingPropertiesMills - startLoadingVerticiesMills));
+		System.out.println("Time needed for loading properties in milliseconds: " + (startLoadingEdgesMills - startLoadingPropertiesMills));
+		System.out.println("Time needed for loading edges in milliseconds: " + (endMills - startLoadingEdgesMills));
 		System.out.println("Total duration in milliseconds: " + (endMills - startMills) + "\n");
 
-		secondsElapsed = (startLoadingGraphMills - startMills) / 1000;
 		System.out.println(String.format(
-				"Time Elapsed for loading schema into the graph: %03dh.%02dm.%01ds",
-				((secondsElapsed / 60) / 60), ((secondsElapsed / 60) % 60), (secondsElapsed % 60)));
+				"Time Elapsed for loading schema: %03dh.%02dm.%02ds",
+				((((startLoadingVerticiesMills - startMills) / 1000) / 60) / 60), ((((startLoadingVerticiesMills - startMills) / 1000) / 60) % 60), (((startLoadingVerticiesMills - startMills) / 1000) % 60)));
 
-		secondsElapsed = endMills - startLoadingGraphMills;
 		System.out.println(String.format(
-				"Time Elapsed for loading data into the graph: %03dh.%02dm.%01ds",
-				((secondsElapsed / 60) / 60), ((secondsElapsed / 60) % 60), (secondsElapsed % 60)));
+				"Time Elapsed for loading verticies: %03dh.%02dm.%02ds",
+				((((startLoadingPropertiesMills - startLoadingVerticiesMills) / 1000) / 60) / 60), ((((startLoadingPropertiesMills - startLoadingVerticiesMills) / 1000) / 60) % 60), (((startLoadingPropertiesMills - startLoadingVerticiesMills) / 1000) % 60)));
+		
+		System.out.println(String.format(
+				"Time Elapsed for loading properties: %03dh.%02dm.%02ds",
+				((((startLoadingEdgesMills - startLoadingPropertiesMills) / 1000) / 60) / 60), ((((startLoadingEdgesMills - startLoadingPropertiesMills) / 1000) / 60) % 60), (((startLoadingEdgesMills - startLoadingPropertiesMills) / 1000) % 60)));
 
-		secondsElapsed = endMills - startMills;
 		System.out.println(String.format(
-				"Total duration: %03dh.%02dm.%01ds",
-				((secondsElapsed / 60) / 60), ((secondsElapsed / 60) % 60), (secondsElapsed % 60)));
+				"Time Elapsed for loading edges: %03dh.%02dm.%02ds",
+				((((endMills - startLoadingEdgesMills) / 1000) / 60) / 60), ((((endMills - startLoadingEdgesMills) / 1000) / 60) % 60), (((endMills - startLoadingEdgesMills) / 1000) % 60)));
+
+		System.out.println(String.format(
+				"Total duration: %03dh.%02dm.%02ds",
+				((((endMills - startMills) / 1000) / 60) / 60), ((((endMills - startMills) / 1000) / 60) % 60), (((endMills - startMills) / 1000) % 60)));
 	}
 }
