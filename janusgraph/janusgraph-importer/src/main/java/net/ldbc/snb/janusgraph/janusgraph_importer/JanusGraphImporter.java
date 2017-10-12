@@ -598,15 +598,15 @@ public class JanusGraphImporter {
 			System.out.println("\nDeclaring all id properties and relatives index");
 			for( String idLabel : idLabels ) {
 				mgmt = graph.openManagement();
-				System.out.println(idLabel + "|");
+				System.out.print(idLabel + "|");
 				PropertyKey id = mgmt.makePropertyKey(idLabel).dataType(Long.class)
 						.cardinality(Cardinality.SINGLE).make(); 
 				String indexLabel = "by" + idLabel.substring(0, 1).toUpperCase() + idLabel.substring(1);
-				System.out.println(indexLabel + " ");
+				System.out.print(indexLabel + " ");
 				mgmt.buildIndex(indexLabel, Vertex.class).addKey(id).buildCompositeIndex();;
 				mgmt.commit();
 			}
-			System.out.println("Graph schema explicitly defined");
+			System.out.println("\nGraph schema explicitly defined");
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, e.toString());
 			return;
@@ -671,11 +671,8 @@ public class JanusGraphImporter {
 				} catch (NoSuchFileException e) {
 					System.out.println(" File not found.");
 				}
-			}
-			System.out.println("Finished loading verticies");
-			
+			}			
 			startLoadingPropertiesMills = System.currentTimeMillis();
-			System.out.println("Loading properties");
 			for (String fileName : propertiesFiles) {
 				System.out.println("Loading properties file " + fileName);
 				try {
@@ -686,10 +683,7 @@ public class JanusGraphImporter {
 					System.out.println(" File not found.");
 				}
 			}
-			System.out.println("Finished loading properties");
-
 			startLoadingEdgesMills = System.currentTimeMillis();
-			System.out.println("Loading edges");
 			for (String fileName : edgeFiles) {
 				System.out.println("Loading edge file " + fileName);
 				try {
@@ -705,14 +699,14 @@ public class JanusGraphImporter {
 					System.out.println(" File not found.");
 				}
 			}
-			System.out.println("Finished loading edges");
+			System.out.println("Finished loading data");
+			endMills = System.currentTimeMillis();
 		} catch (Exception e) {
 			System.out.println("Exception: " + e);
 			e.printStackTrace();
 		} finally {
 			graph.close();
 		}
-		endMills = System.currentTimeMillis();
 		
 		System.out.println("Finished loading data");
 		System.out.println("Time needed for loading schema in milliseconds: " + (startLoadingVerticiesMills - startMills));
