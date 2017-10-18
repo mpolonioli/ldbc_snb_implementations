@@ -13,6 +13,7 @@ import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -665,7 +666,7 @@ public class JanusGraphImporter {
 			for (String fileName : nodeFiles) {
 				System.out.println("Loading node file " + fileName);
 				try {
-					loadVertices(graph, Paths.get(inputBaseDir + "/" + fileName), 
+					loadVertices(graph, Paths.get(inputBaseDir + File.separator + fileName), 
 							true, batchSize, progReportPeriod, threadCount);
 					System.out.println("Finished");
 				} catch (NoSuchFileException e) {
@@ -676,7 +677,7 @@ public class JanusGraphImporter {
 			for (String fileName : propertiesFiles) {
 				System.out.println("Loading properties file " + fileName);
 				try {
-					loadProperties(graph, Paths.get(inputBaseDir + "/" + fileName), 
+					loadProperties(graph, Paths.get(inputBaseDir + File.separator + fileName), 
 							true, batchSize, progReportPeriod, threadCount);
 					System.out.println("Finished");
 				} catch (NoSuchFileException e) {
@@ -688,10 +689,10 @@ public class JanusGraphImporter {
 				System.out.println("Loading edge file " + fileName);
 				try {
 					if (fileName.contains("person_knows_person")) {
-						loadEdges(graph, Paths.get(inputBaseDir + "/" + fileName), true, 
+						loadEdges(graph, Paths.get(inputBaseDir + File.separator + fileName), true, 
 								true, batchSize, progReportPeriod, threadCount);
 					} else {
-						loadEdges(graph, Paths.get(inputBaseDir + "/" + fileName), false, 
+						loadEdges(graph, Paths.get(inputBaseDir + File.separator + fileName), false, 
 								true, batchSize, progReportPeriod, threadCount);
 					}
 					System.out.println("Finished");
