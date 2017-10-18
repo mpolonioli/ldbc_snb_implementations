@@ -51,7 +51,7 @@
       <configuration>
         <archive>
           <manifest>
-            <mainClass>net.ldbc.snb.janusgraph.janusgraph_importer.JanusGraphImporter</mainClass>
+            <mainClass>net.ldbc.snb.janusgraph.importer.JanusGraphImporter</mainClass>
           </manifest>
         </archive>
         <descriptorRefs>

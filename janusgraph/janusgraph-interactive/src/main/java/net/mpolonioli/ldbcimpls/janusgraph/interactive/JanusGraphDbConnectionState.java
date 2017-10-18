@@ -16,7 +16,7 @@ public class JanusGraphDbConnectionState extends DbConnectionState{
 	public JanusGraphDbConnectionState() {
 
 		// create the connection via configuration file  
-		client = JanusGraphFactory.open("//opt//janusgraph//janusgraph-0.1.1-hadoop2//conf//janusgraph-hbase.properties");
+		client = JanusGraphFactory.open("//home//mpolo//programs//janusgraph-0.1.1-hadoop2//conf//janusgraph-hbase.properties");
 	}
 
 	public JanusGraph getClient() {

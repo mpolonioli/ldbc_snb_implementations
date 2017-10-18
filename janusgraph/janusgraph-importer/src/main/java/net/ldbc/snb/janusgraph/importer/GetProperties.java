@@ -1,4 +1,4 @@
-package net.ldbc.snb.janusgraph.janusgraph_importer;
+package net.ldbc.snb.janusgraph.importer;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
