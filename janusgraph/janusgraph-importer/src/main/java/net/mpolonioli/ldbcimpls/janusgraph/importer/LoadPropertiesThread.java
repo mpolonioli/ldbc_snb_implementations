@@ -1,31 +1,28 @@
-package net.ldbc.snb.janusgraph.importer;
+package net.mpolonioli.ldbcimpls.janusgraph.importer;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.TimeZone;
 
-import org.apache.tinkerpop.gremlin.structure.T;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.janusgraph.core.JanusGraph;
 import org.janusgraph.core.JanusGraphTransaction;
 
-public class LoadVerticiesThread extends Thread {
+public class LoadPropertiesThread extends Thread {
+
 
 	private JanusGraph graph;
 	private String[] colNames;
 	private String idLabel;
-	private String entityName;
 	private long txMaxRetries;
 	private String[] threadLines;
 	private long lineCount;
 	
-	public LoadVerticiesThread(
+	public LoadPropertiesThread(
 			JanusGraph graph,
 			String[] colNames,
 			String idLabel,
-			String entityName,
 			long txMaxRetries,
 			String[] threadLines,
 			long lineCount
@@ -33,7 +30,6 @@ public class LoadVerticiesThread extends Thread {
 		this.graph = graph;
 		this.colNames = colNames;
 		this.idLabel = idLabel;
-		this.entityName = entityName;
 		this.threadLines = threadLines;
 		this.lineCount = lineCount;
 	}
@@ -53,46 +49,18 @@ public class LoadVerticiesThread extends Thread {
 		do {
 			JanusGraphTransaction tx = graph.newTransaction();
 			for (int i = 0; i < threadLines.length; i++) {
-
 				String line = threadLines[i];
 
 				String[] colVals = line.split("\\|");
-				HashMap<Object, Object> propertiesMap = new HashMap<>();
 
-				for (int j = 0; j < colVals.length; ++j) {
-					if (colNames[j].equals("id")) {
-						propertiesMap.put(idLabel, Long.parseLong(colVals[j]));
-					} else if (colNames[j].equals("birthday")) {
-						try {
-							propertiesMap.put(colNames[j],
-									birthdayDateFormat.parse(colVals[j]).getTime());
-						} catch (ParseException e) {
-							e.printStackTrace();
-						}
-					} else if (colNames[j].equals("creationDate")) {
-						try {
-							propertiesMap.put(colNames[j], 
-									creationDateDateFormat.parse(colVals[j]).getTime());
-						} catch (ParseException e) {
-							e.printStackTrace();
-						}
-					}else if (colNames[j].equals("length")) {
-						propertiesMap.put(colNames[j], Integer.parseInt(colVals[j]));
-					}else {
-						propertiesMap.put(colNames[j], colVals[j]);
-					}
+				GraphTraversalSource g = tx.traversal();
+				Vertex vertex = 
+						g.V().has(idLabel, Long.parseLong(colVals[0])).next();
+
+				for (int j = 1; j < colVals.length; ++j) {
+					vertex.property(VertexProperty.Cardinality.list, colNames[j],
+							colVals[j]);
 				}
-
-				propertiesMap.put(T.label, entityName);
-
-				List<Object> keyValues = new ArrayList<Object>();
-				propertiesMap.forEach((key, val) -> {
-					keyValues.add(key);
-					keyValues.add(val);
-				});
-
-				tx.addVertex(keyValues.toArray());
-
 			}
 
 			try {

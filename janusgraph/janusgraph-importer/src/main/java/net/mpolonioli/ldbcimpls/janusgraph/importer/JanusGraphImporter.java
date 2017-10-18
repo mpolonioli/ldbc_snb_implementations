@@ -1,4 +1,4 @@
-package net.ldbc.snb.janusgraph.importer;
+package net.mpolonioli.ldbcimpls.janusgraph.importer;
 
 import org.janusgraph.core.Cardinality;
 import org.janusgraph.core.Multiplicity;

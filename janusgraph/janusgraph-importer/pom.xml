@@ -2,7 +2,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>net.ldbc.snb.janusgraph</groupId>
+  <groupId>net.mpolonioli.ldbcimpls</groupId>
   <artifactId>janusgraph-importer</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
@@ -51,7 +51,7 @@
       <configuration>
         <archive>
           <manifest>
-            <mainClass>net.ldbc.snb.janusgraph.importer.JanusGraphImporter</mainClass>
+            <mainClass>net.mpolonioli.ldbcimpls.janusgraph.importer.JanusGraphImporter</mainClass>
           </manifest>
         </archive>
         <descriptorRefs>
